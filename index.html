@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klotski</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&amp;display=swap" rel="stylesheet">
+  <!-- React and Babel for JSX -->
+  <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <!-- ForceGraph3D library -->
+  <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@latest/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@latest/examples/jsm/"
+                }
+            }
+        </script>
+  <script src="https://unpkg.com/react-force-graph-3d"></script><style type="text/css">.float-tooltip-kap {
+  position: absolute;
+  width: max-content; /* prevent shrinking near right edge */
+  max-width: max(50%, 150px);
+  padding: 3px 5px;
+  border-radius: 3px;
+  font: 12px sans-serif;
+  color: #eee;
+  background: rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+</style><style type="text/css">.scene-nav-info {
+  position: absolute;
+  bottom: 5px;
+  width: 100%;
+  text-align: center;
+  color: slategrey;
+  opacity: 0.7;
+  font-size: 10px;
+  font-family: sans-serif;
+  pointer-events: none;
+  user-select: none;
+}
+
+.scene-container canvas:focus {
+  outline: none;
+}</style><style type="text/css">.graph-info-msg {
+  top: 50%;
+  width: 100%;
+  text-align: center;
+  color: lavender;
+  opacity: 0.7;
+  font-size: 22px;
+  position: absolute;
+  font-family: Sans-serif;
+}
+
+.scene-container .clickable {
+  cursor: pointer;
+}
+
+.scene-container .grabbable {
+  cursor: move;
+  cursor: grab;
+  cursor: -moz-grab;
+  cursor: -webkit-grab;
+}
+
+.scene-container .grabbable:active {
+  cursor: grabbing;
+  cursor: -moz-grabbing;
+  cursor: -webkit-grabbing;
+}</style>
+
+  <style>
+        :root {
+            --bg-primary: #0d112c;
+
+ / * #0a0a0a; */
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --border-color: #373857; /* 333 */
+            --text-primary: #ffffff;
+            --text-secondary: #aaaabc;
+            --accent-color: #007aff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Roboto Mono, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .left-panel {
+            width: 320px;
+            background: var(--bg-secondary);
+            padding: 20px;
+            margin: 20px 20px;
+            /** border-right: 1px solid var(--border-color); **/
+            display: flex;
+            flex-direction: column;
+            position:absolute;
+            z-index: 1;
+        }
+        .right-panel {
+            flex: 1;
+            position: relative;
+        }
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 24px 0 12px 0;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 24px 0 12px 0;
+        }
+        .section-header h3 {
+            margin: 0;
+        }
+        .icon-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        hgroup h3 {
+        display: inline;
+        }
+        .icon-button {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .icon-button:hover {
+            background: #2a2a2a;
+        }
+        .info-popup {
+            position: relative;
+            display: inline-block;
+        }
+        .info-tooltip {
+          font-family: Roboto Mono, Arial, sans-serif;
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            min-width: 200px;
+            font-size: 12px;
+            z-index: 1000;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        .info-popup:hover .info-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .info-item {
+            text-align: center;
+        }
+        .info-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .block-palette {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+        }
+        .block-template {
+            background: var(--text-primary);
+            cursor: grab;
+            transition: transform 0.1s ease-out;
+        }
+        .block-template:active {
+            cursor: grabbing;
+            transform: scale(0.9);
+        }
+        .puzzle-wrapper {
+            position: relative;
+            width: 244px; /* 240px grid + 2px border on each side */
+            height: 304px; /* 300px grid + 2px border top/bottom */
+            margin: 20px 0;
+            border: 2px solid var(--border-color);
+            padding: 0;
+        }
+        .puzzle-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 60px;
+            width: 120px;
+            height: 4px;
+            background: var(--bg-primary);
+        }
+        .puzzle-container {
+            position: relative;
+            width: 240px;
+            height: 300px;
+            background-image:
+                linear-gradient(to right, var(--border-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+            background-size: 60px 60px;
+            background-color: var(--bg-tertiary);
+        }
+        .block {
+            position: absolute;
+            cursor: grab;
+            transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 2px solid rgba(0,0,0,0.2);
+        }
+        .block.dragging {
+            opacity: 0.5;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        .ghost-block {
+            position: absolute;
+            background: var(--accent-color);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 999;
+            transition: all 0.05s linear;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: auto;
+        }
+        button {
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: left;
+            transition: background-color 0.2s;
+        }
+        button:hover { background: #2a2a2a; }
+        button:disabled { background: #222; color: #666; cursor: not-allowed; }
+        .status {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            margin: 15px 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        #visualization { width: 100%; height: 100%; background: var(--bg-primary); }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&amp;icon_names=cached,info,remove_selection">
+
+  <style>
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 0,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 24
+  ; margin : 0
+  ; padding : 0
+  ; font-size: 1em
+}
+</style>
+<script>'use strict';
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _React = React,
+    useState = _React.useState,
+    useEffect = _React.useEffect,
+    useRef = _React.useRef;
+
+
+function GraphVisualization() {
+    var _useState = useState({ nodes: [], links: [] }),
+        _useState2 = _slicedToArray(_useState, 2),
+        graphData = _useState2[0],
+        setGraphData = _useState2[1];
+
+    var fgRef = useRef();
+
+    useEffect(function () {
+        // Expose a function to the global scope to be called from plain JS
+        window.updateGraphData = function (newData) {
+            setGraphData(newData);
+        };
+
+        // Enable camera damping for momentum
+        var controls = fgRef.current.controls();
+        controls.enableDamping = true;
+        controls.dampingFactor = 1.6;
+
+        // The ForceGraph component has its own animation loop,
+        // so we don't need to manually call controls.update()
+    }, []);
+
+    useEffect(function () {
+        // Zoom to fit whenever the graph data changes
+        if (fgRef.current && graphData.nodes.length) {
+            document.querySelector('#right-panel .loading').style.display = 'none';
+            // Use a larger padding to ensure the graph is not clipped
+            fgRef.current.zoomToFit(400, 150);
+        } else {
+            document.querySelector('#right-panel .loading').style.display = 'block';
+        }
+    }, [graphData]);
+
+    var getNodeColor = function getNodeColor(node) {
+        if (node.isSolution) return 'cyan';
+        if (node.id === 0) return 'orangered';
+        return 'white';
+    };
+
+    var getLinkColor = function getLinkColor(link) {
+        return link.isSolution ? 'rgba(255,255,255, 1)' : 'rgba(255,255,255, 1)';
+    };
+    var getLinkWidth = function getLinkWidth(link) {
+        return link.isSolution ? 5 : 3;
+    };
+    var getLinkDirectionalParticles = function getLinkDirectionalParticles(link) {
+        return link.isSolution ? 2 : 0;
+    };
+    var getLinkOpacity = function getLinkOpacity(link) {
+        return 1;
+    };
+    var getNodeOpacity = function getNodeOpacity(node) {
+        return 1;
+    };
+
+    var getNodeThreeObject = function getNodeThreeObject(node) {
+
+        var color = void 0;
+        if (node.id === 0) {
+            color = 'orangered';
+        } else if (node.isSolution) {
+            color = 'cyan';
+        } else {
+            color = 'white';
+        }
+
+        // Glow sphere mesh.
+        var glowSize = 3;
+        var geometry = new THREE.SphereGeometry(glowSize, 11, 11);
+        var material = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: 0.3,
+            depthTest: false
+        });
+        var glowEffect = new THREE.Mesh(geometry, material);
+        glowEffect.name = "glow";
+
+        // Smaller solid sphere mesh.
+        var geometrySolid = new THREE.SphereGeometry(2, 9, 9);
+        var materialSolid = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: 1.0,
+            depthTest: false
+        });
+        var mesh = new THREE.Mesh(geometrySolid, materialSolid);
+
+        // Place the smaller solid sphere inside the large glow sphere.
+        var group = new THREE.Group();
+        group.add(mesh);
+        group.add(glowEffect);
+
+        return group;
+    };
+
+    var getLinkThreeMaterial = function getLinkThreeMaterial(link) {
+
+        // Create edges - glowing lines
+        var lineMaterial = new THREE.LineBasicMaterial({
+            color: 'white',
+            transparent: false,
+            opacity: 1
+        });
+
+        var solutionLineMaterial = new THREE.LineBasicMaterial({
+            color: 'cyan',
+            transparent: true,
+            opacity: 1
+        });
+
+        // if (link.isSolution) {
+        //  return(solutionLineMaterial);
+        // }
+        return lineMaterial;
+    };
+
+    console.log('GraphVisualization render', { graphData: graphData });
+
+    return React.createElement(ForceGraph3D, {
+        ref: fgRef,
+        graphData: graphData,
+        nodeLabel: 'label',
+        nodeColor: getNodeColor,
+        nodeOpacity: 1,
+        linkColor: getLinkColor,
+        linkWidth: getLinkWidth,
+        linkOpacity: 1,
+        nodeThreeObject: getNodeThreeObject,
+        linkMaterial: getLinkThreeMaterial,
+        backgroundColor: '#0a0a0a'
+    });
+}
+
+ReactDOM.render(React.createElement(GraphVisualization, null), document.getElementById('visualization'));
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIklubGluZSBCYWJlbCBzY3JpcHQiXSwibmFtZXMiOlsiUmVhY3QiLCJ1c2VTdGF0ZSIsInVzZUVmZmVjdCIsInVzZVJlZiIsIkdyYXBoVmlzdWFsaXphdGlvbiIsIm5vZGVzIiwibGlua3MiLCJncmFwaERhdGEiLCJzZXRHcmFwaERhdGEiLCJmZ1JlZiIsIndpbmRvdyIsInVwZGF0ZUdyYXBoRGF0YSIsIm5ld0RhdGEiLCJjb250cm9scyIsImN1cnJlbnQiLCJlbmFibGVEYW1waW5nIiwiZGFtcGluZ0ZhY3RvciIsImxlbmd0aCIsImRvY3VtZW50IiwicXVlcnlTZWxlY3RvciIsInN0eWxlIiwiZGlzcGxheSIsInpvb21Ub0ZpdCIsImdldE5vZGVDb2xvciIsIm5vZGUiLCJpc1NvbHV0aW9uIiwiaWQiLCJnZXRMaW5rQ29sb3IiLCJsaW5rIiwiZ2V0TGlua1dpZHRoIiwiZ2V0TGlua0RpcmVjdGlvbmFsUGFydGljbGVzIiwiZ2V0TGlua09wYWNpdHkiLCJnZXROb2RlT3BhY2l0eSIsImdldE5vZGVUaHJlZU9iamVjdCIsImNvbG9yIiwiZ2xvd1NpemUiLCJnZW9tZXRyeSIsIlRIUkVFIiwiU3BoZXJlR2VvbWV0cnkiLCJtYXRlcmlhbCIsIk1lc2hCYXNpY01hdGVyaWFsIiwidHJhbnNwYXJlbnQiLCJvcGFjaXR5IiwiZGVwdGhUZXN0IiwiZ2xvd0VmZmVjdCIsIk1lc2giLCJuYW1lIiwiZ2VvbWV0cnlTb2xpZCIsIm1hdGVyaWFsU29saWQiLCJtZXNoIiwiZ3JvdXAiLCJHcm91cCIsImFkZCIsImdldExpbmtUaHJlZU1hdGVyaWFsIiwibGluZU1hdGVyaWFsIiwiTGluZUJhc2ljTWF0ZXJpYWwiLCJzb2x1dGlvbkxpbmVNYXRlcmlhbCIsIlJlYWN0RE9NIiwicmVuZGVyIiwiZ2V0RWxlbWVudEJ5SWQiXSwibWFwcGluZ3MiOiI7Ozs7YUFDOENBLEs7SUFBaENDLFEsVUFBQUEsUTtJQUFVQyxTLFVBQUFBLFM7SUFBV0MsTSxVQUFBQSxNOzs7QUFFN0IsU0FB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QVBSO0FBUUgscUJBQWEsQ0FSVjtBQVNILHlCQUFpQkksa0JBVGQ7QUFVSCxzQkFBY29CLG9CQVZYO0FBV0gseUJBQWdCO0FBWGIsTUFBUDtBQWFEOztBQUVESSxTQUFTQyxNQUFULENBQ0Usb0JBQUMsa0JBQUQsT0FERixFQUVFeEMsU0FBU3lDLGNBQVQsQ0FBd0IsZUFBeEIsQ0FGRiIsImZpbGUiOiJJbmxpbmUgQmFiZWwgc2NyaXB0Iiwic291cmNlc0NvbnRlbnQiOlsiXG4gICAgICBjb25zdCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QsIHVzZVJlZiB9ID0gUmVhY3Q7XG5cbiAgICAgIGZ1bmN0aW9uIEdyYXBoVmlzdWFsaXphdGlvbigpIHtcbiAgICAgICAgY29uc3QgW2dyYXBoRGF0YSwgc2V0R3JhcGhEYXRhXSA9IHVzZVN0YXRlKHsgbm9kZXM6IFtdLCBsaW5rczogW10gfSk7XG4gICAgICAgIGNvbnN0IGZnUmVmID0gdXNlUmVmKCk7XG5cbiAgICAgICAgdXNlRWZmZWN0KCgpID0+IHtcbiAgICAgICAgICAvLyBFeHBvc2UgYSBmdW5jdGlvbiB0byB0aGUgZ2xvYmFsIHNjb3BlIHRvIGJlIGNhbGxlZCBmcm9tIHBsYWluIEpTXG4gICAgICAgICAgd2luZG93LnVwZGF0ZUdyYXBoRGF0YSA9IChuZXdEYXRhKSA9PiB7XG4gICAgICAgICAgICBzZXRHcmFwaERhdGEobmV3RGF0YSk7XG4gICAgICAgICAgfTtcblxuICAgICAgICAgIC8vIEVuYWJsZSBjYW1lcmEgZGFtcGluZyBmb3IgbW9tZW50dW1cbiAgICAgICAgICBjb25zdCBjb250cm9scyA9IGZnUmVmLmN1cnJlbnQuY29udHJvbHMoKTtcbiAgICAgICAgICBjb250cm9scy5lbmFibGVEYW1waW5nID0gdHJ1ZTtcbiAgICAgICAgICBjb250cm9scy5kYW1waW5nRmFjdG9yID0gMS42O1xuXG4gICAgICAgICAgLy8gVGhlIEZvcmNlR3JhcGggY29tcG9uZW50IGhhcyBpdHMgb3duIGFuaW1hdGlvbiBsb29wLFxuICAgICAgICAgIC8vIHNvIHdlIGRvbid0IG5lZWQgdG8gbWFudWFsbHkgY2FsbCBjb250cm9scy51cGRhdGUoKVxuICAgICAgICB9LCBbXSk7XG5cbiAgICAgICAgdXNlRWZmZWN0KCgpID0+IHtcbiAgICAgICAgICAvLyBab29tIHRvIGZpdCB3aGVuZXZlciB0aGUgZ3JhcGggZGF0YSBjaGFuZ2VzXG4gICAgICAgICAgaWYgKGZnUmVmLmN1cnJlbnQgJiYgZ3JhcGhEYXRhLm5vZGVzLmxlbmd0aCkge1xuICAgICAgICAgICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJyNyaWdodC1wYW5lbCAubG9hZGluZycpLnN0eWxlLmRpc3BsYXkgPSAnbm9uZSc7XG4gICAgICAgICAgICAvLyBVc2UgYSBsYXJnZXIgcGFkZGluZyB0byBlbnN1cmUgdGhlIGdyYXBoIGlzIG5vdCBjbGlwcGVkXG4gICAgICAgICAgICAgZmdSZWYuY3VycmVudC56b29tVG9GaXQoNDAwLCAxNTApO1xuICAgICAgICAgIH1cbiAgICAgICAgICBlbHNlIHtcbiAgICAgICAgICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJyNyaWdodC1wYW5lbCAubG9hZGluZycpLnN0eWxlLmRpc3BsYXkgPSAnYmxvY2snO1xuICAgICAgICAgIH1cbiAgICAgICAgfSwgW2dyYXBoRGF0YV0pO1xuXG5cbiAgICAgICAgY29uc3QgZ2V0Tm9kZUNvbG9yID0gKG5vZGUpID0+IHtcbiAgICAgICAgICAgIGlmIChub2RlLmlzU29sdXRpb24pIHJldHVybiAnY3lhbic7XG4gICAgICAgICAgICBpZiAobm9kZS5pZCA9PT0gMCkgcmV0dXJuICdvcmFuZ2VyZWQnO1xuICAgICAgICAgICAgcmV0dXJuICd3aGl0ZSc7XG4gICAgICAgIH07XG5cbiAgICAgICAgY29uc3QgZ2V0TGlua0NvbG9yID0gKGxpbmspID0+IChsaW5rLmlzU29sdXRpb24gPyAncmdiYSgyNTUsMjU1LDI1NSwgMSknIDogJ3JnYmEoMjU1LDI1NSwyNTUsIDEpJyk7XG4gICAgICAgIGNvbnN0IGdldExpbmtXaWR0aCA9IChsaW5rKSA9PiAobGluay5pc1NvbHV0aW9uID8gNSA6IDMpO1xuICAgICAgICBjb25zdCBnZXRMaW5rRGlyZWN0aW9uYWxQYXJ0aWNsZXMgPSAobGluaykgPT4gKGxpbmsuaXNTb2x1dGlvbiA/IDIgOiAwKTtcbiAgICAgICAgY29uc3QgZ2V0TGlua09wYWNpdHkgPSAobGluaykgPT4gMVxuICAgICAgICBjb25zdCBnZXROb2RlT3BhY2l0eSA9IChub2RlKSA9PiAxXG5cbiAgICAgICAgdmFyIGdldE5vZGVUaHJlZU9iamVjdCA9IGZ1bmN0aW9uKG5vZGUpIHtcblxuICAgICAgICAgICAgbGV0IGNvbG9yO1xuICAgICAgICAgICAgICAgIGlmIChub2RlLmlkID09PSAwKSB7XG4gICAgICAgICAgICAgICAgICAgIGNvbG9yID0gJ29yYW5nZXJlZCc7XG4gICAgICAgICAgICAgICAgfSBlbHNlIGlmIChub2RlLmlzU29sdXRpb24pIHtcbiAgICAgICAgICAgICAgICAgICAgY29sb3IgPSAnY3lhbic7XG4gICAgICAgICAgICAgICAgfSBlbHNlICB7XG4gICAgICAgICAgICAgICAgICAgIGNvbG9yID0gJ3doaXRlJztcbiAgICAgICAgICAgICAgICB9XG5cblxuICAgICAgICAvLyBHbG93IHNwaGVyZSBtZXNoLlxuICAgICAgICAgICAgY29uc3QgZ2xvd1NpemUgPSAzO1xuICAgICAgICAgICAgY29uc3QgZ2VvbWV0cnkgPSBuZXcgVEhSRUUuU3BoZXJlR2VvbWV0cnkoZ2xvd1NpemUsIDExLCAxMSk7XG4gICAgICAgICAgICBjb25zdCBtYXRlcmlhbCA9IG5ldyBUSFJFRS5NZXNoQmFzaWNNYXRlcmlhbCh7XG4gICAgICAgICAgICAgICAgY29sb3I6IGNvbG9yLFxuICAgICAgICAgICAgICAgIHRyYW5zcGFyZW50OiB0cnVlLFxuICAgICAgICAgICAgICAgIG9wYWNpdHk6IDAuMyxcbiAgICAgICAgICAgICAgICBkZXB0aFRlc3Q6IGZhbHNlXG4gICAgICAgICAgICAgIH0pO1xuICAgICAgICAgICAgY29uc3QgZ2xvd0VmZmVjdCA9IG5ldyBUSFJFRS5NZXNoKGdlb21ldHJ5LCBtYXRlcmlhbCk7XG4gICAgICAgICAgICBnbG93RWZmZWN0Lm5hbWUgPSBcImdsb3dcIjtcblxuICAgICAgICAgICAgICAgIC8vIFNtYWxsZXIgc29saWQgc3BoZXJlIG1lc2guXG4gICAgICAgICAgICBjb25zdCBnZW9tZXRyeVNvbGlkID0gbmV3IFRIUkVFLlNwaGVyZUdlb21ldHJ5KDIsIDksIDkpO1xuICAgICAgICAgICAgY29uc3QgbWF0ZXJpYWxTb2xpZCA9IG5ldyBUSFJFRS5NZXNoQmFzaWNNYXRlcmlhbCh7XG4gICAgICAgICAgICAgICAgY29sb3I6IGNvbG9yLFxuICAgICAgICAgICAgICAgIHRyYW5zcGFyZW50OiB0cnVlLFxuICAgICAgICAgICAgICAgIG9wYWNpdHk6IDEuMCxcbiAgICAgICAgICAgICAgICBkZXB0aFRlc3Q6IGZhbHNlXG4gICAgICAgICAgICAgIH0pO1xuICAgICAgICAgICAgY29uc3QgbWVzaCA9IG5ldyBUSFJFRS5NZXNoKGdlb21ldHJ5U29saWQsIG1hdGVyaWFsU29saWQpO1xuXG4gICAgICAgICAgICAgICAgLy8gUGxhY2UgdGhlIHNtYWxsZXIgc29saWQgc3BoZXJlIGluc2lkZSB0aGUgbGFyZ2UgZ2xvdyBzcGhlcmUuXG4gICAgICAgICAgICB2YXIgZ3JvdXAgPSBuZXcgVEhSRUUuR3JvdXAoKTtcbiAgICAgICAgICAgIGdyb3VwLmFkZChtZXNoKTtcbiAgICAgICAgICAgIGdyb3VwLmFkZChnbG93RWZmZWN0KTtcblxuICAgICAgICAgICAgcmV0dXJuIGdyb3VwO1xuICAgICAgICB9XG5cbiAgICAgICAgY29uc3QgZ2V0TGlua1RocmVlTWF0ZXJpYWwgPSBmdW5jdGlvbihsaW5rKSB7XG5cbiAgICAgICAgICAgICAgICAgICAgLy8gQ3JlYXRlIGVkZ2VzIC0gZ2xvd2luZyBsaW5lc1xuICAgICAgICAgICAgY29uc3QgbGluZU1hdGVyaWFsID0gbmV3IFRIUkVFLkxpbmVCYXNpY01hdGVyaWFsKHtcbiAgICAgICAgICAgICAgICBjb2xvcjogJ3doaXRlJyxcbiAgICAgICAgICAgICAgICB0cmFuc3BhcmVudDogZmFsc2UsXG4gICAgICAgICAgICAgICAgb3BhY2l0eTogMVxuICAgICAgICAgICAgfSk7XG5cbiAgICAgICAgICAgIGNvbnN0IHNvbHV0aW9uTGluZU1hdGVyaWFsID0gbmV3IFRIUkVFLkxpbmVCYXNpY01hdGVyaWFsKHtcbiAgICAgICAgICAgICAgICBjb2xvcjogJ2N5YW4nLFxuICAgICAgICAgICAgICAgIHRyYW5zcGFyZW50OiB0cnVlLFxuICAgICAgICAgICAgICAgIG9wYWNpdHk6IDFcbiAgICAgICAgICAgIH0pO1xuXG5cbiAgICAgICAgICAgLy8gaWYgKGxpbmsuaXNTb2x1dGlvbikge1xuICAgICAgICAgICAgLy8gIHJldHVybihzb2x1dGlvbkxpbmVNYXRlcmlhbCk7XG4gICAgICAgICAgIC8vIH1cbiAgICAgICAgICAgIHJldHVybiBsaW5lTWF0ZXJpYWw7XG5cbiAgICAgICAgICAgIH1cblxuXG5cbiAgICAgICAgcmV0dXJuIDxGb3JjZUdyYXBoM0RcbiAgICAgICAgICAgIHJlZj17ZmdSZWZ9XG4gICAgICAgICAgICBncmFwaERhdGE9e2dyYXBoRGF0YX1cbiAgICAgICAgICAgIG5vZGVMYWJlbD1cImxhYmVsXCJcbiAgICAgICAgICAgIG5vZGVDb2xvcj17Z2V0Tm9kZUNvbG9yfVxuICAgICAgICAgICAgbm9kZU9wYWNpdHk9ezF9XG4gICAgICAgICAgICBsaW5rQ29sb3I9e2dldExpbmtDb2xvcn1cbiAgICAgICAgICAgIGxpbmtXaWR0aD17Z2V0TGlua1dpZHRofVxuICAgICAgICAgICAgbGlua09wYWNpdHk9ezF9XG4gICAgICAgICAgICBub2RlVGhyZWVPYmplY3Q9e2dldE5vZGVUaHJlZU9iamVjdH1cbiAgICAgICAgICAgIGxpbmtNYXRlcmlhbD17Z2V0TGlua1RocmVlTWF0ZXJpYWx9XG4gICAgICAgICAgICBiYWNrZ3JvdW5kQ29sb3I9XCIjMGEwYTBhXCJcbiAgICAgICAgICAvPjtcbiAgICAgIH1cblxuICAgICAgUmVhY3RET00ucmVuZGVyKFxuICAgICAgICA8R3JhcGhWaXN1YWxpemF0aW9uIC8+LFxuICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgndmlzdWFsaXphdGlvbicpXG4gICAgICApO1xuXG5cblxuICAgICJdfQ==</script></head>
+<body>
+
+<!-- Klotski Logic (Plain JS) -->
+<script type="module">
+    import * as THREE from 'three';
+
+        let puzzleState = Array(20).fill(null);
+        let blockCounter = 0;
+        let isGenerating = false;
+        let ghostBlock = null;
+        let draggedElement = null;
+        let dropSuccess = false;
+        let currentSearchNode = null;
+        let nodeStates = new Map(); // Store states for each node
+
+        const GRID_WIDTH = 4;
+        const GRID_HEIGHT = 5;
+        const CELL_SIZE = 60;
+
+        const blockTypes = {
+            '2x2': { width: 2, height: 2 }, '2x1': { width: 2, height: 1 },
+            '1x2': { width: 1, height: 2 }, '1x1': { width: 1, height: 1 }
+        };
+
+        const blockColors = [
+            "#e63946", "#f1faee", "#a8dadc", "#457b9d", "#1d3557",
+            "#ffb703", "#fb8500", "#e76f51", "#2a9d8f", "#264653",
+            "#f72585", "#b5179e", "#7209b7", "#480ca8", "#3a0ca3"
+        ];
+        let colorIndex = 0;
+
+        function getRandomColor() {
+            return blockColors[Math.floor(Math.random() * blockColors.length)];
+        }
+
+
+
+
+        function generateRandomPuzzle() {
+            clearPuzzle();
+
+            // Always include one 2x2 block (required for win condition)
+            const mainBlockRow = Math.floor(Math.random() * 4);
+            const mainBlockCol = Math.floor(Math.random() * 3);
+            createBlock('2x2', mainBlockRow, mainBlockCol);
+
+            // Generate random additional blocks, leaving 2-5 squares free
+            const totalCells = 20;
+            const usedCells = 4; // 2x2 block
+            const freeCells = 2 + Math.floor(Math.random() * 4); // 2-5 free cells
+            const remainingCells = totalCells - usedCells - freeCells;
+
+            let placedCells = usedCells;
+            const blockTypeList = ['2x1', '1x2', '1x1'];
+
+            let attempts = 0;
+            while (placedCells < totalCells - freeCells && attempts < 50) {
+                const randomType = blockTypeList[Math.floor(Math.random() * blockTypeList.length)];
+                const blockData = blockTypes[randomType];
+
+                const row = Math.floor(Math.random() * (GRID_HEIGHT - blockData.height + 1));
+                const col = Math.floor(Math.random() * (GRID_WIDTH - blockData.width + 1));
+
+                if (canPlaceBlock(null, randomType, row, col)) {
+                    createBlock(randomType, row, col);
+                    placedCells += blockData.width * blockData.height;
+                } else {
+                    attempts++;
+                }
+            }
+
+            updateStatus(`Random puzzle generated with ${document.querySelectorAll('.block').length} blocks.`);
+          generateGraph();
+        }
+
+                function init() {
+            setupDragAndDrop();
+            generateRandomPuzzle();
+        }
+
+        function createGhostBlock() {
+            if (!ghostBlock) {
+                ghostBlock = document.createElement('div');
+                ghostBlock.className = 'ghost-block';
+                document.getElementById('puzzleContainer').appendChild(ghostBlock);
+            }
+        }
+
+        function setupDragAndDrop() {
+            const templates = document.querySelectorAll('.block-template');
+            const puzzleContainer = document.getElementById('puzzleContainer');
+
+            templates.forEach(template => {
+                template.draggable = true;
+                template.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', e.target.dataset.type);
+                    e.dataTransfer.effectAllowed = 'copy';
+                    draggedElement = e.target;
+                });
+            });
+
+            puzzleContainer.addEventListener('dragstart', e => {
+                if(e.target.classList.contains('block')) {
+                    draggedElement = e.target;
+                    setTimeout(() => e.target.classList.add('dragging'), 0);
+                    e.dataTransfer.setData('block-id', e.target.dataset.blockId);
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+
+            puzzleContainer.addEventListener('dragenter', e => {
+                e.preventDefault();
+                if (!draggedElement) return;
+                createGhostBlock();
+                ghostBlock.style.display = 'block';
+            });
+
+            puzzleContainer.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (!ghostBlock || !draggedElement) return;
+
+                const type = draggedElement.dataset.type || e.dataTransfer.getData('text/plain');
+                if (!blockTypes[type]) return;
+
+                const blockData = blockTypes[type];
+                const rect = puzzleContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                let col = Math.floor(x / CELL_SIZE);
+                let row = Math.floor(y / CELL_SIZE);
+
+                col = Math.max(0, Math.min(col, GRID_WIDTH - blockData.width));
+                row = Math.max(0, Math.min(row, GRID_HEIGHT - blockData.height));
+
+                ghostBlock.style.width = `${blockData.width * CELL_SIZE}px`;
+                ghostBlock.style.height = `${blockData.height * CELL_SIZE}px`;
+                ghostBlock.style.left = `${col * CELL_SIZE}px`;
+                ghostBlock.style.top = `${row * CELL_SIZE}px`;
+            });
+
+            puzzleContainer.addEventListener('dragleave', e => {
+                if (ghostBlock && e.target === puzzleContainer) {
+                    ghostBlock.style.display = 'none';
+                }
+            });
+
+            puzzleContainer.addEventListener('drop', e => {
+                e.preventDefault();
+                if (ghostBlock) ghostBlock.style.display = 'none';
+                if (!draggedElement) return;
+
+                const rect = puzzleContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const col = Math.floor(x / CELL_SIZE);
+                const row = Math.floor(y / CELL_SIZE);
+
+                const newBlockType = e.dataTransfer.getData('text/plain');
+                const existingBlockId = e.dataTransfer.getData('block-id');
+
+                if (existingBlockId) {
+                    moveBlock(existingBlockId, row, col);
+                } else if (blockTypes[newBlockType]) {
+                    createBlock(newBlockType, row, col);
+                }
+                dropSuccess = true;
+            });
+
+            document.addEventListener('dragend', e => {
+                if (draggedElement && draggedElement.classList.contains('block')) {
+                    if (!dropSuccess) {
+                        removeBlock(draggedElement.dataset.blockId);
+                    }
+                    draggedElement.classList.remove('dragging');
+                }
+                draggedElement = null;
+                dropSuccess = false;
+                generateGraph();
+            });
+        }
+
+        function createBlock(type, row, col) {
+            const blockData = blockTypes[type];
+            row = Math.min(row, GRID_HEIGHT - blockData.height);
+            col = Math.min(col, GRID_WIDTH - blockData.width);
+
+            if (!canPlaceBlock(null, type, row, col)) {
+                updateStatus('Cannot place block here.');
+                return;
+            }
+
+            const blockId = blockCounter++;
+            const block = document.createElement('div');
+            block.className = 'block';
+            block.draggable = true;
+            block.dataset.blockId = blockId;
+            block.dataset.type = type;
+
+            block.style.width = `${blockData.width * CELL_SIZE}px`;
+            block.style.height = `${blockData.height * CELL_SIZE}px`;
+            block.style.left = `${col * CELL_SIZE}px`;
+            block.style.top = `${row * CELL_SIZE}px`;
+            block.style.backgroundColor = getRandomColor();
+
+            document.getElementById('puzzleContainer').appendChild(block);
+            markBlockInState(row, col, blockData.width, blockData.height, blockId);
+        }
+
+        function moveBlock(blockId, newRow, newCol) {
+            const block = document.querySelector(`[data-block-id="${blockId}"]`);
+            if (!block) return;
+
+            const type = block.dataset.type;
+            const blockData = blockTypes[type];
+
+            newRow = Math.min(newRow, GRID_HEIGHT - blockData.height);
+            newCol = Math.min(newCol, GRID_WIDTH - blockData.width);
+
+            const oldState = getCurrentPuzzleState();
+            const oldBlock = oldState.find(b => b.id == blockId);
+            clearBlockArea(oldBlock.row, oldBlock.col, oldBlock.width, oldBlock.height);
+
+            if (canPlaceBlock(blockId, type, newRow, newCol)) {
+                block.style.left = `${newCol * CELL_SIZE}px`;
+                block.style.top = `${newRow * CELL_SIZE}px`;
+                markBlockInState(newRow, newCol, blockData.width, blockData.height, blockId);
+            } else {
+                markBlockInState(oldBlock.row, oldBlock.col, oldBlock.width, oldBlock.height, blockId);
+            }
+        }
+
+        function removeBlock(blockId) {
+            const block = document.querySelector(`[data-block-id="${blockId}"]`);
+            if (!block) return;
+
+            const state = getCurrentPuzzleState();
+            const blockToRemove = state.find(b => b.id == blockId);
+            if (blockToRemove) {
+                clearBlockArea(blockToRemove.row, blockToRemove.col, blockToRemove.width, blockToRemove.height);
+            }
+            block.remove();
+        }
+
+        function canPlaceBlock(excludeId, type, row, col) {
+            const { width, height } = blockTypes[type];
+            if (row < 0 || col < 0 || row + height > GRID_HEIGHT || col + width > GRID_WIDTH) return false;
+            for (let r = row; r < row + height; r++) {
+                for (let c = col; c < col + width; c++) {
+                    const occupant = puzzleState[r * GRID_WIDTH + c];
+                    if (occupant !== null && occupant != excludeId) return false;
+                }
+            }
+            return true;
+        }
+
+        function clearBlockArea(row, col, width, height) {
+             for (let r = row; r < row + height; r++) {
+                for (let c = col; c < col + width; c++) {
+                    puzzleState[r * GRID_WIDTH + c] = null;
+                }
+            }
+        }
+
+        function markBlockInState(row, col, width, height, blockId) {
+            for (let r = row; r < row + height; r++) {
+                for (let c = col; c < col + width; c++) {
+                    puzzleState[r * GRID_WIDTH + c] = blockId;
+                }
+            }
+        }
+
+        function clearPuzzle() {
+            if (isGenerating) return;
+            puzzleState.fill(null);
+            document.querySelectorAll('.block').forEach(b => b.remove());
+            blockCounter = 0;
+            colorIndex = 0;
+            updateStatus('Puzzle cleared.');
+            window.updateGraphData({ nodes: [], links: [] });
+        }
+
+        function displayPuzzleState(state) {
+            // Clear current display
+            document.querySelectorAll('.block').forEach(b => b.remove());
+            puzzleState.fill(null);
+
+            // Display the given state
+            state.forEach(block => {
+                const blockElement = document.createElement('div');
+                blockElement.className = 'block';
+                blockElement.dataset.blockId = block.id;
+                blockElement.dataset.type = block.type;
+
+                blockElement.style.width = `${block.width * CELL_SIZE}px`;
+                blockElement.style.height = `${block.height * CELL_SIZE}px`;
+                blockElement.style.left = `${block.col * CELL_SIZE}px`;
+                blockElement.style.top = `${block.row * CELL_SIZE}px`;
+                blockElement.style.backgroundColor = getRandomColor();
+
+                document.getElementById('puzzleContainer').appendChild(blockElement);
+                markBlockInState(block.row, block.col, block.width, block.height, block.id);
+            });
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function generateGraph() {
+            if (document.querySelectorAll('.block').length === 0) {
+                updateStatus('Add blocks to the grid first.');
+                return;
+            }
+            if (!Array.from(document.querySelectorAll('.block')).some(b => b.dataset.type === '2x2')) {
+                updateStatus('The puzzle must include one 2x2 block.');
+                return;
+            }
+
+            isGenerating = true;
+            updateStatus('Generating...');
+            currentSearchNode = null;
+            nodeStates.clear();
+
+            buildStateGraphAnimated();
+        }
+
+        function buildStateGraphAnimated() {
+            const initialState = getCurrentPuzzleState();
+            const visited = new Set();
+            const queue = [{ state: initialState, parent: null }];
+            const stateToNodeId = new Map();
+            let graphData = { nodes: [], links: [] };
+
+           while (queue.length > 0 && graphData.nodes.length < 100000) {
+
+                const { state, parent } = queue.shift();
+                const stateKey = stateToString(state);
+
+                if (visited.has(stateKey)) {
+                    continue;
+                }
+                visited.add(stateKey);
+
+                const nodeId = graphData.nodes.length;
+                stateToNodeId.set(stateKey, nodeId);
+                const isSolution = isWinState(state);
+
+                const newNode = {
+                    id: nodeId,
+                    isSolution: isSolution,
+                    label: `State ${nodeId}`
+                };
+                graphData.nodes.push(newNode);
+                nodeStates.set(nodeId, state);
+
+                // Update current search node for visualization
+                currentSearchNode = nodeId;
+                // window.updateCurrentSearchNode(nodeId);
+
+                if (parent !== null) {
+                    graphData.links.push({ source: parent, target: nodeId });
+                }
+
+                window.updateGraphData({ ...graphData });
+                document.getElementById('stateCount').textContent = graphData.nodes.length;
+                document.getElementById('edgeCount').textContent = graphData.links.length;
+
+                const nextStates = generateNextStates(state);
+                for (const next of nextStates) {
+                    let nextStateKey = stateToString(next);
+                    if (!visited.has(nextStateKey)) {
+                        queue.push({ state: next, parent: nodeId });
+                    } else {
+                        let nextNodeId = stateToNodeId.get(nextStateKey);
+                        graphData.links.push({ source: nodeId, target: nextNodeId });
+                    }
+                }
+
+
+
+            }
+          finishGeneration(graphData);
+
+        }
+
+        function finishGeneration(graphData) {
+            updateStatus(`Complete: ${graphData.nodes.length} states.`);
+            isGenerating = false;
+            currentSearchNode = null;
+            // window.updateCurrentSearchNode(null);
+
+            const solutionPath = findSolution(graphData);
+            if (solutionPath) {
+                document.getElementById('solutionSteps').textContent = solutionPath.length - 1;
+                document.getElementById('solvable').textContent = 'Yes';
+
+                const solutionLinks = new Set();
+                for (let i = 0; i < solutionPath.length - 1; i++) {
+                    solutionLinks.add(`${solutionPath[i]}-${solutionPath[i+1]}`);
+                    solutionLinks.add(`${solutionPath[i+1]}-${solutionPath[i]}`);
+                }
+
+                const finalLinks = graphData.links.map(link => ({
+                    ...link,
+                    isSolution: solutionLinks.has(`${link.source.id || link.source}-${link.target.id || link.target}`)
+                }));
+                window.updateGraphData({ nodes: graphData.nodes, links: finalLinks });
+
+            } else {
+                document.getElementById('solutionSteps').textContent = '-';
+                document.getElementById('solvable').textContent = 'No';
+            }
+        }
+
+        function getCurrentPuzzleState() {
+            const blocks = Array.from(document.querySelectorAll('.block')).map(b => {
+                const rect = b.getBoundingClientRect();
+                const gridRect = document.getElementById('puzzleContainer').getBoundingClientRect();
+                return {
+                    id: b.dataset.blockId,
+                    type: b.dataset.type,
+                    row: Math.round((rect.top - gridRect.top) / CELL_SIZE),
+                    col: Math.round((rect.left - gridRect.left) / CELL_SIZE),
+                    ...blockTypes[b.dataset.type]
+                };
+            });
+            return blocks;
+        }
+
+        function stateToString(state) {
+            const sortedState = [...state].sort((a, b) => {
+                if (a.row !== b.row) return a.row - b.row;
+                return a.col - b.col;
+            });
+            return sortedState.map(b => `${b.type}@${b.row},${b.col}`).join('|');
+        }
+
+        function isWinState(state) {
+            const mainBlock = state.find(b => b.type === '2x2');
+            return mainBlock && mainBlock.row === 3 && mainBlock.col === 1;
+        }
+
+        function generateNextStates(blocks) {
+            const nextStates = new Map();
+            function spacesUsed(b, row, col) {
+               let a = [];
+                for (let r = 0; r < b.height; r++) {
+                    for (let c = 0; c < b.width; c++) {
+                        a.push((row + r) * GRID_WIDTH + (col + c));
+                    }
+                }
+                return a;
+            }
+            const emptyCells = new Set(Array.from({ length: 20 }, (_, i) => i));
+            blocks.forEach(b => {
+              spacesUsed(b, b.row, b.col).forEach(x => {
+                  emptyCells.delete(x)
+                  });
+            });
+
+            blocks.forEach((block, index) => {
+              spacesUsed(block, block.row, block.col).forEach(x => {
+              emptyCells.add(x)
+              });
+
+                const allMoves = [{ dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 }];
+                let allowedMoves = [];
+
+                switch (block.type) {
+                    case '1x2':
+                        allowedMoves = allMoves.filter(move => move.dc === 0);
+                        break;
+                    case '2x1':
+                        allowedMoves = allMoves.filter(move => move.dr === 0);
+                        break;
+                    default:
+                        allowedMoves = allMoves;
+                        break;
+                }
+
+                allowedMoves.forEach(move => {
+                    const newRow = block.row + move.dr;
+                    const newCol = block.col + move.dc;
+
+                    if (newRow < 0 || newCol < 0 || newRow + block.height > GRID_HEIGHT || newCol + block.width > GRID_WIDTH) return;
+
+                    let canMove = true;
+                    spacesUsed(block, newRow, newCol).forEach(x => {
+                      canMove = canMove && emptyCells.has(x);
+                      });
+
+                    if (canMove) {
+                        const newState = JSON.parse(JSON.stringify(blocks));
+                        newState[index].row = newRow;
+                        newState[index].col = newCol;
+                        const stateKey = stateToString(newState);
+                        if (!nextStates.has(stateKey)) {
+                           nextStates.set(stateKey, newState);
+                        }
+                    }
+                });
+
+                spacesUsed(block, block.row, block.col).forEach(x => {
+                  emptyCells.delete(x)
+                  });
+            });
+            return Array.from(nextStates.values());
+        }
+
+        function findSolution(graph) {
+            const startNodeId = 0;
+            const goalNode = graph.nodes.find(n => n.isSolution);
+            if (goalNode === undefined) return null;
+
+            const adj = new Map();
+            graph.links.forEach(({ source, target }) => {
+                const sourceId = source.id ?? source;
+                const targetId = target.id ?? target;
+                if (!adj.has(sourceId)) adj.set(sourceId, []);
+                if (!adj.has(targetId)) adj.set(targetId, []);
+                adj.get(sourceId).push(targetId);
+                adj.get(targetId).push(sourceId);
+            });
+
+            const queue = [[startNodeId]];
+            const visited = new Set([startNodeId]);
+
+            while (queue.length > 0) {
+                const path = queue.shift();
+                const nodeId = path[path.length - 1];
+                if (nodeId === goalNode.id) return path;
+
+                (adj.get(nodeId) || []).forEach(neighbor => {
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        queue.push([...path, neighbor]);
+                    }
+                });
+            }
+            return null;
+        }
+
+
+
+
+
+        // Global functions
+        window.generateRandomPuzzle = generateRandomPuzzle;
+        window.clearPuzzle = clearPuzzle;
+        window.THREE = THREE;
+        window.nodeStates = nodeStates;
+        window.displayPuzzleState = displayPuzzleState;
+        window.init = init
+
+        document.addEventListener('DOMContentLoaded', () => { setTimeout(() => {init()}, 100) });
+
+  </script>
+
+
+<!-- React Visualization Component -->
+<script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      function GraphVisualization() {
+        const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+        const fgRef = useRef();
+
+        useEffect(() => {
+          // Expose a function to the global scope to be called from plain JS
+          window.updateGraphData = (newData) => {
+            setGraphData(newData);
+          };
+
+          // Enable camera damping for momentum
+          const controls = fgRef.current.controls();
+          controls.enableDamping = true;
+          controls.dampingFactor = 1.6;
+
+          // The ForceGraph component has its own animation loop,
+          // so we don't need to manually call controls.update()
+        }, []);
+
+        useEffect(() => {
+          // Zoom to fit whenever the graph data changes
+          if (fgRef.current && graphData.nodes.length) {
+             document.querySelector('#right-panel .loading').style.display = 'none';
+            // Use a larger padding to ensure the graph is not clipped
+             fgRef.current.zoomToFit(400, 150);
+          }
+          else {
+            document.querySelector('#right-panel .loading').style.display = 'block';
+          }
+        }, [graphData]);
+
+
+        const getNodeColor = (node) => {
+            if (node.isSolution) return 'cyan';
+            if (node.id === 0) return 'orangered';
+            return 'white';
+        };
+
+        const getLinkColor = (link) => (link.isSolution ? 'rgba(255,255,255, 1)' : 'rgba(255,255,255, 1)');
+        const getLinkWidth = (link) => (link.isSolution ? 5 : 3);
+        const getLinkDirectionalParticles = (link) => (link.isSolution ? 2 : 0);
+        const getLinkOpacity = (link) => 1
+        const getNodeOpacity = (node) => 1
+
+        var getNodeThreeObject = function(node) {
+
+            let color;
+                if (node.id === 0) {
+                    color = 'orangered';
+                } else if (node.isSolution) {
+                    color = 'cyan';
+                } else  {
+                    color = 'white';
+                }
+
+
+        // Glow sphere mesh.
+            const glowSize = 3;
+            const geometry = new THREE.SphereGeometry(glowSize, 11, 11);
+            const material = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.3,
+                depthTest: false
+              });
+            const glowEffect = new THREE.Mesh(geometry, material);
+            glowEffect.name = "glow";
+
+                // Smaller solid sphere mesh.
+            const geometrySolid = new THREE.SphereGeometry(2, 9, 9);
+            const materialSolid = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 1.0,
+                depthTest: false
+              });
+            const mesh = new THREE.Mesh(geometrySolid, materialSolid);
+
+                // Place the smaller solid sphere inside the large glow sphere.
+            var group = new THREE.Group();
+            group.add(mesh);
+            group.add(glowEffect);
+
+            return group;
+        }
+
+        const getLinkThreeMaterial = function(link) {
+
+                    // Create edges - glowing lines
+            const lineMaterial = new THREE.LineBasicMaterial({
+                color: 'white',
+                transparent: false,
+                opacity: 1
+            });
+
+            const solutionLineMaterial = new THREE.LineBasicMaterial({
+                color: 'cyan',
+                transparent: true,
+                opacity: 1
+            });
+
+
+           // if (link.isSolution) {
+            //  return(solutionLineMaterial);
+           // }
+            return lineMaterial;
+
+            }
+
+
+
+        return <ForceGraph3D
+            ref={fgRef}
+            graphData={graphData}
+            nodeLabel="label"
+            nodeColor={getNodeColor}
+            nodeOpacity={1}
+            linkColor={getLinkColor}
+            linkWidth={getLinkWidth}
+            linkOpacity={1}
+            nodeThreeObject={getNodeThreeObject}
+            linkMaterial={getLinkThreeMaterial}
+            backgroundColor="#0a0a0a"
+          />;
+      }
+
+      ReactDOM.render(
+        <GraphVisualization />,
+        document.getElementById('visualization')
+      );
+
+
+
+    </script>
+
+<div class="container">
+  <div class="left-panel">
+    <div>
+      <h1>Klotski</h1>
+      <h3>Blocks</h3>
+      <div class="block-palette">
+        <div class="block-template" data-type="2x2" style="width: 40px; height: 40px;" draggable="true"></div>
+        <div class="block-template" data-type="2x1" style="width: 40px; height: 19px;" draggable="true"></div>
+        <div class="block-template" data-type="1x2" style="width: 19px; height: 40px;" draggable="true"></div>
+        <div class="block-template" data-type="1x1" style="width: 19px; height: 19px;" draggable="true"></div>
+      </div>
+      <hgroup>
+        <h3>Puzzle grid</h3>
+        <div class="icon-button material-symbols-outlined" onclick="generateRandomPuzzle()">cached</div>
+        <div class="icon-button material-symbols-outlined" onclick="clearPuzzle()">remove_selection</div>
+        <div class="icon-button info-popup material-symbols-outlined">info
+          <div class="info-tooltip graph-info" id="graphInfo">
+            <div class="info-item"><div class="info-label">States</div><div class="info-value" id="stateCount">9826</div></div>
+            <div class="info-item"><div class="info-label">Edges</div><div class="info-value" id="edgeCount">33134</div></div>
+            <div class="info-item"><div class="info-label">Steps</div><div class="info-value" id="solutionSteps">-</div></div>
+            <div class="info-item"><div class="info-label">Solvable</div><div class="info-value" id="solvable">No</div></div>
+
+          </div>
+        </div>
+      </hgroup>
+      <div class="puzzle-wrapper">
+        <div class="puzzle-container" id="puzzleContainer"></div>
+      </div>
+      <div class="status" id="status" style="display:hidden">Puzzle cleared.</div>
+    </div>
+    <div class="controls">
+      <!--      <button onclick="generateGraph()" id="generateBtn">Generate & Solve</button>-->
+      <!--      <button onclick="loadExample()">Load Example</button>-->
+      <!--      <button onclick="clearPuzzle()">Clear Grid</button>-->
+    </div>
+  </div>
+  <div class="right-panel" id="right-panel">
+    <div class="loading" style="display: block;">Create a puzzle by adding at least one block</div>
+    <div id="visualization"><div><div style="position: relative;"><div><div class="scene-container" style="position: relative; width: 700px; height: 800px;"><div class="scene-nav-info">Left-click: rotate, Mouse-wheel/middle-click: zoom, Right-click: pan</div><div class="float-tooltip-kap" style="left: 635px; display: none; top: 444px; transform: translate(-90.7143%, 21px);"></div><canvas data-engine="three.js r180" width="875" height="1000" style="display: block; touch-action: none; width: 700px; height: 800px;"></canvas></div></div><div class="graph-info-msg"></div></div></div></div>
+  </div>
+</div>
+
+
+
+</body></html>
