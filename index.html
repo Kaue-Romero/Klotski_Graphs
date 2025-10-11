@@ -533,7 +533,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
                 }
             }
 
-            updateStatus(`Random puzzle generated with ${document.querySelectorAll('.block').length} blocks.`);
+            updateStatus(`Jogo aleatório formado com ${document.querySelectorAll('.block').length} blocos.`);
           generateGraph();
         }
 
@@ -650,7 +650,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             col = Math.min(col, GRID_WIDTH - blockData.width);
 
             if (!canPlaceBlock(null, type, row, col)) {
-                updateStatus('Cannot place block here.');
+                updateStatus('Não pode adicionar um bloco aqui.');
                 return;
             }
 
@@ -740,7 +740,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             document.querySelectorAll('.block').forEach(b => b.remove());
             blockCounter = 0;
             colorIndex = 0;
-            updateStatus('Puzzle cleared.');
+            updateStatus('Jogo resetado.');
             window.updateGraphData({ nodes: [], links: [] });
         }
 
@@ -773,16 +773,16 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
 
         function generateGraph() {
             if (document.querySelectorAll('.block').length === 0) {
-                updateStatus('Add blocks to the grid first.');
+                updateStatus('Adicione blocos na malha primeiro.');
                 return;
             }
             if (!Array.from(document.querySelectorAll('.block')).some(b => b.dataset.type === '2x2')) {
-                updateStatus('The puzzle must include one 2x2 block.');
+                updateStatus('O jogo deve incluir um bloco 2x2.');
                 return;
             }
 
             isGenerating = true;
-            updateStatus('Generating...');
+            updateStatus('Gerando...');
             currentSearchNode = null;
             nodeStates.clear();
 
@@ -813,7 +813,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
                 const newNode = {
                     id: nodeId,
                     isSolution: isSolution,
-                    label: `State ${nodeId}`
+                    label: `Estado ${nodeId}`
                 };
                 graphData.nodes.push(newNode);
                 nodeStates.set(nodeId, state);
@@ -1204,12 +1204,16 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
       <!--      <button onclick="clearPuzzle()">Clear Grid</button>-->
     </div>
     <div>
-        <h3>Cŕeditos <a target="_blank" href="https://seasalt.sh/words/klotski">Seasalt Klotski</a></h3>
+        <h3>Créditos <a target="_blank" href="https://seasalt.sh/words/klotski">Seasalt Klotski</a></h3>
     </div>
   </div>
-  <div class="right-panel" id="right-panel">
-    <div class="loading" style="display: block;">Create a puzzle by adding at least one block</div>
-    <div id="visualization"><div><div style="position: relative;"><div><div class="scene-container" style="position: relative; width: 700px; height: 800px;"><div class="scene-nav-info">Left-click: rotate, Mouse-wheel/middle-click: zoom, Right-click: pan</div><div class="float-tooltip-kap" style="left: 635px; display: none; top: 444px; transform: translate(-90.7143%, 21px);"></div><canvas data-engine="three.js r180" width="875" height="1000" style="display: block; touch-action: none; width: 700px; height: 800px;"></canvas></div></div><div class="graph-info-msg"></div></div></div></div>
+  <div style="width: 800px; height: 800px; position: relative;">
+      <div class="right-panel" id="right-panel">
+        <div class="loading" style="display: block;">
+             Crie um quebra-cabeça adicionando pelo menos um bloco 2x2.
+        </div>
+        <div id="visualization"><div><div style="position: relative;"><div><div class="scene-container" style="position: relative; width: 700px; height: 800px;"><div class="scene-nav-info">Botão Esquerdo: Rotacionar, Scroll: Zoom, Botão Direito: Pan</div><div class="float-tooltip-kap" style="left: 635px; display: none; top: 444px; transform: translate(-90.7143%, 21px);"></div><canvas data-engine="three.js r180" width="875" height="1000" style="display: block; touch-action: none; width: 700px; height: 800px;"></canvas></div></div><div class="graph-info-msg"></div></div></div></div>
+      </div>
   </div>
 </div>
 
