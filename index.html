@@ -539,7 +539,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
 
                 function init() {
             setupDragAndDrop();
-            generateRandomPuzzle();
+            //generateRandomPuzzle();
         }
 
         function createGhostBlock() {
@@ -768,7 +768,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
         }
 
         function updateStatus(message) {
-            document.getElementById('status').textContent = message;
+            document.getElementById('status').innerHTML = message;
         }
 
         function generateGraph() {
@@ -796,7 +796,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             const stateToNodeId = new Map();
             let graphData = { nodes: [], links: [] };
 
-           while (queue.length > 0 && graphData.nodes.length < 100000) {
+            while (queue.length > 0 && graphData.nodes.length < 1000) {
 
                 const { state, parent } = queue.shift();
                 const stateKey = stateToString(state);
@@ -849,7 +849,11 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
         }
 
         function finishGeneration(graphData) {
-            updateStatus(`Complete: ${graphData.nodes.length} states.`);
+            updateStatus(`
+            Completo<br>
+            Vértices: ${graphData.nodes.length}.<br>
+            Arestas: ${graphData.links.length}.<br>
+            `);
             isGenerating = false;
             currentSearchNode = null;
             // window.updateCurrentSearchNode(null);
@@ -857,7 +861,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             const solutionPath = findSolution(graphData);
             if (solutionPath) {
                 document.getElementById('solutionSteps').textContent = solutionPath.length - 1;
-                document.getElementById('solvable').textContent = 'Yes';
+                document.getElementById('solvable').textContent = 'Sim';
 
                 const solutionLinks = new Set();
                 for (let i = 0; i < solutionPath.length - 1; i++) {
@@ -873,7 +877,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
 
             } else {
                 document.getElementById('solutionSteps').textContent = '-';
-                document.getElementById('solvable').textContent = 'No';
+                document.getElementById('solvable').textContent = 'Não';
             }
         }
 
@@ -1005,12 +1009,15 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             return null;
         }
 
-
-
-
+        function showSolutionPathToggle() {
+            window.showSolutionPath = !window.showSolutionPath;
+            buildStateGraphAnimated();
+        }
 
         // Global functions
         window.generateRandomPuzzle = generateRandomPuzzle;
+        window.showSolutionPath = false;
+        window.showSolutionPathToggle = showSolutionPathToggle;
         window.clearPuzzle = clearPuzzle;
         window.THREE = THREE;
         window.nodeStates = nodeStates;
@@ -1128,9 +1135,9 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             });
 
 
-           // if (link.isSolution) {
-            //  return(solutionLineMaterial);
-           // }
+            if (link.isSolution && window.showSolutionPath) {
+                return(solutionLineMaterial);
+            }
             return lineMaterial;
 
             }
@@ -1165,7 +1172,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
   <div class="left-panel">
     <div>
       <h1>Klotski</h1>
-      <h3>Blocks</h3>
+      <h3>Blocos</h3>
       <div class="block-palette">
         <div class="block-template" data-type="2x2" style="width: 40px; height: 40px;" draggable="true"></div>
         <div class="block-template" data-type="2x1" style="width: 40px; height: 19px;" draggable="true"></div>
@@ -1173,15 +1180,15 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
         <div class="block-template" data-type="1x1" style="width: 19px; height: 19px;" draggable="true"></div>
       </div>
       <hgroup>
-        <h3>Puzzle grid</h3>
+        <h3>Malha do Jogo</h3>
         <div class="icon-button material-symbols-outlined" onclick="generateRandomPuzzle()">cached</div>
         <div class="icon-button material-symbols-outlined" onclick="clearPuzzle()">remove_selection</div>
         <div class="icon-button info-popup material-symbols-outlined">info
           <div class="info-tooltip graph-info" id="graphInfo">
-            <div class="info-item"><div class="info-label">States</div><div class="info-value" id="stateCount">9826</div></div>
-            <div class="info-item"><div class="info-label">Edges</div><div class="info-value" id="edgeCount">33134</div></div>
-            <div class="info-item"><div class="info-label">Steps</div><div class="info-value" id="solutionSteps">-</div></div>
-            <div class="info-item"><div class="info-label">Solvable</div><div class="info-value" id="solvable">No</div></div>
+            <div class="info-item"><div class="info-label">Vértices</div><div class="info-value" id="stateCount">9826</div></div>
+            <div class="info-item"><div class="info-label">Conexões</div><div class="info-value" id="edgeCount">33134</div></div>
+            <div class="info-item"><div class="info-label">Paços</div><div class="info-value" id="solutionSteps">-</div></div>
+            <div class="info-item"><div class="info-label">Resolúvel</div><div class="info-value" id="solvable">No</div></div>
 
           </div>
         </div>
@@ -1189,12 +1196,15 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
       <div class="puzzle-wrapper">
         <div class="puzzle-container" id="puzzleContainer"></div>
       </div>
-      <div class="status" id="status" style="display:hidden">Puzzle cleared.</div>
+      <div class="status" id="status" style="display:hidden">Jogo resetado.</div>
     </div>
     <div class="controls">
-      <!--      <button onclick="generateGraph()" id="generateBtn">Generate & Solve</button>-->
+        <button onclick="showSolutionPathToggle()" id="generateBtn">Mostrar Solução</button>
       <!--      <button onclick="loadExample()">Load Example</button>-->
       <!--      <button onclick="clearPuzzle()">Clear Grid</button>-->
+    </div>
+    <div>
+        <h3>Cŕeditos <a target="_blank" href="https://seasalt.sh/words/klotski">Seasalt Klotski</a></h3>
     </div>
   </div>
   <div class="right-panel" id="right-panel">
