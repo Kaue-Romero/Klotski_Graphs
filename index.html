@@ -366,7 +366,7 @@ function GraphVisualization() {
     };
 
     var getLinkColor = function getLinkColor(link) {
-        return link.isSolution ? 'rgba(255,255,255, 1)' : 'rgba(255,255,255, 1)';
+        return link.color || 'white';
     };
     var getLinkWidth = function getLinkWidth(link) {
         return link.isSolution ? 5 : 3;
@@ -789,21 +789,29 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             buildStateGraphAnimated();
         }
 
-        function buildStateGraphAnimated() {
-            const initialState = getCurrentPuzzleState();
-            const visited = new Set();
-            const queue = [{ state: initialState, parent: null }];
-            const stateToNodeId = new Map();
+        function buildStateGraphAnimated(strategy = 'bfs', closenessHighlight = false) {
+            const initialState = getCurrentPuzzleState(); 
+            const stateToNodeId = new Map(); 
             let graphData = { nodes: [], links: [] };
 
-            while (queue.length > 0 && graphData.nodes.length < 1000) {
+            if (strategy === 'bfs') {
+                bfs(graphData, initialState, stateToNodeId);
+            } else if (strategy === 'dfs') {
+                dfs(graphData, initialState, stateToNodeId);
+            }
 
+            calculateCentrality(graphData, closenessHighlight);
+            finishGeneration(graphData);
+        }
+
+        function bfs(graphData, initialState, stateToNodeId) {
+            const visited = new Set();
+            const queue = [{ state: initialState, parent: null }];
+
+            while (queue.length > 0 && graphData.nodes.length < 1000) {
                 const { state, parent } = queue.shift();
                 const stateKey = stateToString(state);
-
-                if (visited.has(stateKey)) {
-                    continue;
-                }
+                if (visited.has(stateKey)) continue;
                 visited.add(stateKey);
 
                 const nodeId = graphData.nodes.length;
@@ -818,13 +826,8 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
                 graphData.nodes.push(newNode);
                 nodeStates.set(nodeId, state);
 
-                // Update current search node for visualization
                 currentSearchNode = nodeId;
-                // window.updateCurrentSearchNode(nodeId);
-
-                if (parent !== null) {
-                    graphData.links.push({ source: parent, target: nodeId });
-                }
+                if (parent !== null) graphData.links.push({ source: parent, target: nodeId });
 
                 window.updateGraphData({ ...graphData });
                 document.getElementById('stateCount').textContent = graphData.nodes.length;
@@ -832,21 +835,164 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
 
                 const nextStates = generateNextStates(state);
                 for (const next of nextStates) {
-                    let nextStateKey = stateToString(next);
-                    if (!visited.has(nextStateKey)) {
-                        queue.push({ state: next, parent: nodeId });
-                    } else {
-                        let nextNodeId = stateToNodeId.get(nextStateKey);
-                        graphData.links.push({ source: nodeId, target: nextNodeId });
+                    const nextStateKey = stateToString(next);
+                    if (!visited.has(nextStateKey)) queue.push({ state: next, parent: nodeId });
+                    else graphData.links.push({ source: nodeId, target: stateToNodeId.get(nextStateKey) });
+                }
+            }
+        }
+
+        function dfs(graphData, initialState, stateToNodeId) {
+            const visited = new Set();
+            const stack = [{ state: initialState, parent: null }];
+
+            while (stack.length > 0 && graphData.nodes.length < 1000) {
+                const { state, parent } = stack.pop();
+                const stateKey = stateToString(state);
+                if (visited.has(stateKey)) continue;
+                visited.add(stateKey);
+
+                const nodeId = graphData.nodes.length;
+                stateToNodeId.set(stateKey, nodeId);
+                const isSolution = isWinState(state);
+
+                const newNode = { id: nodeId, isSolution, label: `Estado ${nodeId}` };
+                graphData.nodes.push(newNode);
+                nodeStates.set(nodeId, state);
+
+                currentSearchNode = nodeId;
+                if (parent !== null) graphData.links.push({ source: parent, target: nodeId });
+
+                window.updateGraphData({ ...graphData });
+                document.getElementById('stateCount').textContent = graphData.nodes.length;
+                document.getElementById('edgeCount').textContent = graphData.links.length;
+
+                const nextStates = generateNextStates(state);
+                for (const next of nextStates) {
+                    const nextStateKey = stateToString(next);
+                    if (!visited.has(nextStateKey)) stack.push({ state: next, parent: nodeId });
+                    else graphData.links.push({ source: nodeId, target: stateToNodeId.get(nextStateKey) });
+                }
+            }
+        }
+
+        function calculateCentrality(graphData, closenessHighlight) {
+            const n = graphData.nodes.length;
+            const adjacency = new Map();
+
+            // inicializa mapa de adjacência
+            for (const node of graphData.nodes) adjacency.set(node.id, new Set());
+            for (const link of graphData.links) {
+                adjacency.get(link.source).add(link.target);
+                adjacency.get(link.target).add(link.source);
+            }
+
+            // centralidade de grau
+            for (const node of graphData.nodes) {
+                node.degree = adjacency.get(node.id).size;
+            }
+
+            // centralidade de proximidade e radialidade
+            for (const node of graphData.nodes) {
+                const distances = bfsDistances(node.id, adjacency);
+                const sumDist = Object.values(distances).reduce((a,b)=>a+b,0);
+                node.closeness = sumDist > 0 ? (n - 1) / sumDist : 0;
+                node.radiality = sumDist > 0 ? ( (n-1) - sumDist/(n-1) ) : 0;
+                node.eccentricity = Math.max(...Object.values(distances));
+                node.label = `
+                ID: ${node.id} </br>
+                Grau: ${node.degree}</br>
+                Centralidade: ${node.closeness.toFixed(2)}</br>
+                Radialidade: ${node.radiality.toFixed(2)}</br>
+                Excentricidade: ${node.eccentricity}
+                `;
+            }
+
+            graphData.nodes.forEach(n => n.betweenness = 0);
+            for (const s of graphData.nodes) {
+                const stack = [], pred = new Map();
+                const sigma = new Map(), dist = new Map();
+                const delta = new Map();
+                graphData.nodes.forEach(v => { pred.set(v.id, []); sigma.set(v.id, 0); dist.set(v.id, -1); delta.set(v.id, 0); });
+                sigma.set(s.id, 1); dist.set(s.id, 0);
+                const queue = [s.id];
+
+                while (queue.length > 0) {
+                    const v = queue.shift();
+                    stack.push(v);
+                    for (const w of adjacency.get(v)) {
+                        if (dist.get(w) < 0) {
+                            dist.set(w, dist.get(v) + 1);
+                            queue.push(w);
+                        }
+                        if (dist.get(w) === dist.get(v) + 1) {
+                            sigma.set(w, sigma.get(w) + sigma.get(v));
+                            pred.get(w).push(v);
+                        }
                     }
                 }
 
-
-
+                while (stack.length > 0) {
+                    const w = stack.pop();
+                    for (const v of pred.get(w)) {
+                        delta.set(v, delta.get(v) + (sigma.get(v)/sigma.get(w))*(1 + delta.get(w)));
+                    }
+                    if (w !== s.id) graphData.nodes[w].betweenness += delta.get(w);
+                }
             }
-          finishGeneration(graphData);
 
+            if (closenessHighlight) {
+                const maxCloseness = Math.max(...graphData.nodes.map(n => n.closeness), 0.00001);
+                graphData.nodes.forEach(n => {
+                    const t = n.closeness / maxCloseness; 
+
+                    let r, g, b;
+
+                    if (t < 0.5) {
+                        const localT = t / 0.5;
+                        r = 0;
+                        g = Math.round(255 * localT);
+                        b = Math.round(255 * (1 - localT));
+                    } else {
+                        const localT = (t - 0.5) / 0.5;
+                        r = Math.round(255 * localT);
+                        g = Math.round(255 * (1 - localT));
+                        b = 0;
+                    }
+
+                    const toHex = (v) => v.toString(16).padStart(2, '0');
+                    n.color = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+                });
+
+            } else {
+                graphData.nodes.forEach(n => {
+                    if (n.id === 0) {
+                        n.color = '#ff5733';
+                    } else {
+                        n.color = n.isSolution ? '#3498db' : 'white';
+                    }
+                });
+            }
+
+            return graphData;
         }
+
+        function bfsDistances(start, adjacency) {
+            const dist = {};
+            const queue = [start];
+            dist[start] = 0;
+            while(queue.length > 0) {
+                const node = queue.shift();
+                for (const neighbor of adjacency.get(node)) {
+                    if (dist[neighbor] === undefined) {
+                        dist[neighbor] = dist[node] + 1;
+                        queue.push(neighbor);
+                    }
+                }
+            }
+            return dist;
+        }
+
 
         function finishGeneration(graphData) {
             updateStatus(`
@@ -1014,10 +1160,17 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             buildStateGraphAnimated();
         }
 
+        function showClosenessHighlightToggle() {
+            window.showClosenessHighlight = !window.showClosenessHighlight;
+            buildStateGraphAnimated('bfs', window.showClosenessHighlight);
+        }
+
         // Global functions
         window.generateRandomPuzzle = generateRandomPuzzle;
         window.showSolutionPath = false;
         window.showSolutionPathToggle = showSolutionPathToggle;
+        window.showClosenessHighlight = false;
+        window.showClosenessHighlightToggle = showClosenessHighlightToggle;
         window.clearPuzzle = clearPuzzle;
         window.THREE = THREE;
         window.nodeStates = nodeStates;
@@ -1071,7 +1224,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             return 'white';
         };
 
-        const getLinkColor = (link) => (link.isSolution ? 'rgba(255,255,255, 1)' : 'rgba(255,255,255, 1)');
+        const getLinkColor = (link) => (link.color || 'white');
         const getLinkWidth = (link) => (link.isSolution ? 5 : 3);
         const getLinkDirectionalParticles = (link) => (link.isSolution ? 2 : 0);
         const getLinkOpacity = (link) => 1
@@ -1079,14 +1232,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
 
         var getNodeThreeObject = function(node) {
 
-            let color;
-                if (node.id === 0) {
-                    color = 'orangered';
-                } else if (node.isSolution) {
-                    color = 'cyan';
-                } else  {
-                    color = 'white';
-                }
+            let color = node.color || 'white';
 
 
         // Glow sphere mesh.
@@ -1200,6 +1346,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
     </div>
     <div class="controls">
         <button onclick="showSolutionPathToggle()" id="generateBtn">Mostrar Solução</button>
+        <button onclick="showClosenessHighlightToggle()" id="generateBtn">Mostrar Grau de Closeness</button>
       <!--      <button onclick="loadExample()">Load Example</button>-->
       <!--      <button onclick="clearPuzzle()">Clear Grid</button>-->
     </div>
