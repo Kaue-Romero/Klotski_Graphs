@@ -460,7 +460,9 @@ function GraphVisualization() {
     });
 }
 
-ReactDOM.render(React.createElement(GraphVisualization, null), document.getElementById('visualization'));
+document.addEventListener('DOMContentLoaded', function () {
+    ReactDOM.render(React.createElement(GraphVisualization, null), document.getElementById('visualization'));
+});
 //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIklubGluZSBCYWJlbCBzY3JpcHQiXSwibmFtZXMiOlsiUmVhY3QiLCJ1c2VTdGF0ZSIsInVzZUVmZmVjdCIsInVzZVJlZiIsIkdyYXBoVmlzdWFsaXphdGlvbiIsIm5vZGVzIiwibGlua3MiLCJncmFwaERhdGEiLCJzZXRHcmFwaERhdGEiLCJmZ1JlZiIsIndpbmRvdyIsInVwZGF0ZUdyYXBoRGF0YSIsIm5ld0RhdGEiLCJjb250cm9scyIsImN1cnJlbnQiLCJlbmFibGVEYW1waW5nIiwiZGFtcGluZ0ZhY3RvciIsImxlbmd0aCIsImRvY3VtZW50IiwicXVlcnlTZWxlY3RvciIsInN0eWxlIiwiZGlzcGxheSIsInpvb21Ub0ZpdCIsImdldE5vZGVDb2xvciIsIm5vZGUiLCJpc1NvbHV0aW9uIiwiaWQiLCJnZXRMaW5rQ29sb3IiLCJsaW5rIiwiZ2V0TGlua1dpZHRoIiwiZ2V0TGlua0RpcmVjdGlvbmFsUGFydGljbGVzIiwiZ2V0TGlua09wYWNpdHkiLCJnZXROb2RlT3BhY2l0eSIsImdldE5vZGVUaHJlZU9iamVjdCIsImNvbG9yIiwiZ2xvd1NpemUiLCJnZW9tZXRyeSIsIlRIUkVFIiwiU3BoZXJlR2VvbWV0cnkiLCJtYXRlcmlhbCIsIk1lc2hCYXNpY01hdGVyaWFsIiwidHJhbnNwYXJlbnQiLCJvcGFjaXR5IiwiZGVwdGhUZXN0IiwiZ2xvd0VmZmVjdCIsIk1lc2giLCJuYW1lIiwiZ2VvbWV0cnlTb2xpZCIsIm1hdGVyaWFsU29saWQiLCJtZXNoIiwiZ3JvdXAiLCJHcm91cCIsImFkZCIsImdldExpbmtUaHJlZU1hdGVyaWFsIiwibGluZU1hdGVyaWFsIiwiTGluZUJhc2ljTWF0ZXJpYWwiLCJzb2x1dGlvbkxpbmVNYXRlcmlhbCIsIlJlYWN0RE9NIiwicmVuZGVyIiwiZ2V0RWxlbWVudEJ5SWQiXSwibWFwcGluZ3MiOiI7Ozs7YUFDOENBLEs7SUFBaENDLFEsVUFBQUEsUTtJQUFVQyxTLFVBQUFBLFM7SUFBV0MsTSxVQUFBQSxNOzs7QUFFN0IsU0FB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QVBSO0FBUUgscUJBQWEsQ0FSVjtBQVNILHlCQUFpQkksa0JBVGQ7QUFVSCxzQkFBY29CLG9CQVZYO0FBV0gseUJBQWdCO0FBWGIsTUFBUDtBQWFEOztBQUVESSxTQUFTQyxNQUFULENBQ0Usb0JBQUMsa0JBQUQsT0FERixFQUVFeEMsU0FBU3lDLGNBQVQsQ0FBd0IsZUFBeEIsQ0FGRiIsImZpbGUiOiJJbmxpbmUgQmFiZWwgc2NyaXB0Iiwic291cmNlc0NvbnRlbnQiOlsiXG4gICAgICBjb25zdCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QsIHVzZVJlZiB9ID0gUmVhY3Q7XG5cbiAgICAgIGZ1bmN0aW9uIEdyYXBoVmlzdWFsaXphdGlvbigpIHtcbiAgICAgICAgY29uc3QgW2dyYXBoRGF0YSwgc2V0R3JhcGhEYXRhXSA9IHVzZVN0YXRlKHsgbm9kZXM6IFtdLCBsaW5rczogW10gfSk7XG4gICAgICAgIGNvbnN0IGZnUmVmID0gdXNlUmVmKCk7XG5cbiAgICAgICAgdXNlRWZmZWN0KCgpID0+IHtcbiAgICAgICAgICAvLyBFeHBvc2UgYSBmdW5jdGlvbiB0byB0aGUgZ2xvYmFsIHNjb3BlIHRvIGJlIGNhbGxlZCBmcm9tIHBsYWluIEpTXG4gICAgICAgICAgd2luZG93LnVwZGF0ZUdyYXBoRGF0YSA9IChuZXdEYXRhKSA9PiB7XG4gICAgICAgICAgICBzZXRHcmFwaERhdGEobmV3RGF0YSk7XG4gICAgICAgICAgfTtcblxuICAgICAgICAgIC8vIEVuYWJsZSBjYW1lcmEgZGFtcGluZyBmb3IgbW9tZW50dW1cbiAgICAgICAgICBjb25zdCBjb250cm9scyA9IGZnUmVmLmN1cnJlbnQuY29udHJvbHMoKTtcbiAgICAgICAgICBjb250cm9scy5lbmFibGVEYW1waW5nID0gdHJ1ZTtcbiAgICAgICAgICBjb250cm9scy5kYW1waW5nRmFjdG9yID0gMS42O1xuXG4gICAgICAgICAgLy8gVGhlIEZvcmNlR3JhcGggY29tcG9uZW50IGhhcyBpdHMgb3duIGFuaW1hdGlvbiBsb29wLFxuICAgICAgICAgIC8vIHNvIHdlIGRvbid0IG5lZWQgdG8gbWFudWFsbHkgY2FsbCBjb250cm9scy51cGRhdGUoKVxuICAgICAgICB9LCBbXSk7XG5cbiAgICAgICAgdXNlRWZmZWN0KCgpID0+IHtcbiAgICAgICAgICAvLyBab29tIHRvIGZpdCB3aGVuZXZlciB0aGUgZ3JhcGggZGF0YSBjaGFuZ2VzXG4gICAgICAgICAgaWYgKGZnUmVmLmN1cnJlbnQgJiYgZ3JhcGhEYXRhLm5vZGVzLmxlbmd0aCkge1xuICAgICAgICAgICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJyNyaWdodC1wYW5lbCAubG9hZGluZycpLnN0eWxlLmRpc3BsYXkgPSAnbm9uZSc7XG4gICAgICAgICAgICAvLyBVc2UgYSBsYXJnZXIgcGFkZGluZyB0byBlbnN1cmUgdGhlIGdyYXBoIGlzIG5vdCBjbGlwcGVkXG4gICAgICAgICAgICAgZmdSZWYuY3VycmVudC56b29tVG9GaXQoNDAwLCAxNTApO1xuICAgICAgICAgIH1cbiAgICAgICAgICBlbHNlIHtcbiAgICAgICAgICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJyNyaWdodC1wYW5lbCAubG9hZGluZycpLnN0eWxlLmRpc3BsYXkgPSAnYmxvY2snO1xuICAgICAgICAgIH1cbiAgICAgICAgfSwgW2dyYXBoRGF0YV0pO1xuXG5cbiAgICAgICAgY29uc3QgZ2V0Tm9kZUNvbG9yID0gKG5vZGUpID0+IHtcbiAgICAgICAgICAgIGlmIChub2RlLmlzU29sdXRpb24pIHJldHVybiAnY3lhbic7XG4gICAgICAgICAgICBpZiAobm9kZS5pZCA9PT0gMCkgcmV0dXJuICdvcmFuZ2VyZWQnO1xuICAgICAgICAgICAgcmV0dXJuICd3aGl0ZSc7XG4gICAgICAgIH07XG5cbiAgICAgICAgY29uc3QgZ2V0TGlua0NvbG9yID0gKGxpbmspID0+IChsaW5rLmlzU29sdXRpb24gPyAncmdiYSgyNTUsMjU1LDI1NSwgMSknIDogJ3JnYmEoMjU1LDI1NSwyNTUsIDEpJyk7XG4gICAgICAgIGNvbnN0IGdldExpbmtXaWR0aCA9IChsaW5rKSA9PiAobGluay5pc1NvbHV0aW9uID8gNSA6IDMpO1xuICAgICAgICBjb25zdCBnZXRMaW5rRGlyZWN0aW9uYWxQYXJ0aWNsZXMgPSAobGluaykgPT4gKGxpbmsuaXNTb2x1dGlvbiA/IDIgOiAwKTtcbiAgICAgICAgY29uc3QgZ2V0TGlua09wYWNpdHkgPSAobGluaykgPT4gMVxuICAgICAgICBjb25zdCBnZXROb2RlT3BhY2l0eSA9IChub2RlKSA9PiAxXG5cbiAgICAgICAgdmFyIGdldE5vZGVUaHJlZU9iamVjdCA9IGZ1bmN0aW9uKG5vZGUpIHtcblxuICAgICAgICAgICAgbGV0IGNvbG9yO1xuICAgICAgICAgICAgICAgIGlmIChub2RlLmlkID09PSAwKSB7XG4gICAgICAgICAgICAgICAgICAgIGNvbG9yID0gJ29yYW5nZXJlZCc7XG4gICAgICAgICAgICAgICAgfSBlbHNlIGlmIChub2RlLmlzU29sdXRpb24pIHtcbiAgICAgICAgICAgICAgICAgICAgY29sb3IgPSAnY3lhbic7XG4gICAgICAgICAgICAgICAgfSBlbHNlICB7XG4gICAgICAgICAgICAgICAgICAgIGNvbG9yID0gJ3doaXRlJztcbiAgICAgICAgICAgICAgICB9XG5cblxuICAgICAgICAvLyBHbG93IHNwaGVyZSBtZXNoLlxuICAgICAgICAgICAgY29uc3QgZ2xvd1NpemUgPSAzO1xuICAgICAgICAgICAgY29uc3QgZ2VvbWV0cnkgPSBuZXcgVEhSRUUuU3BoZXJlR2VvbWV0cnkoZ2xvd1NpemUsIDExLCAxMSk7XG4gICAgICAgICAgICBjb25zdCBtYXRlcmlhbCA9IG5ldyBUSFJFRS5NZXNoQmFzaWNNYXRlcmlhbCh7XG4gICAgICAgICAgICAgICAgY29sb3I6IGNvbG9yLFxuICAgICAgICAgICAgICAgIHRyYW5zcGFyZW50OiB0cnVlLFxuICAgICAgICAgICAgICAgIG9wYWNpdHk6IDAuMyxcbiAgICAgICAgICAgICAgICBkZXB0aFRlc3Q6IGZhbHNlXG4gICAgICAgICAgICAgIH0pO1xuICAgICAgICAgICAgY29uc3QgZ2xvd0VmZmVjdCA9IG5ldyBUSFJFRS5NZXNoKGdlb21ldHJ5LCBtYXRlcmlhbCk7XG4gICAgICAgICAgICBnbG93RWZmZWN0Lm5hbWUgPSBcImdsb3dcIjtcblxuICAgICAgICAgICAgICAgIC8vIFNtYWxsZXIgc29saWQgc3BoZXJlIG1lc2guXG4gICAgICAgICAgICBjb25zdCBnZW9tZXRyeVNvbGlkID0gbmV3IFRIUkVFLlNwaGVyZUdlb21ldHJ5KDIsIDksIDkpO1xuICAgICAgICAgICAgY29uc3QgbWF0ZXJpYWxTb2xpZCA9IG5ldyBUSFJFRS5NZXNoQmFzaWNNYXRlcmlhbCh7XG4gICAgICAgICAgICAgICAgY29sb3I6IGNvbG9yLFxuICAgICAgICAgICAgICAgIHRyYW5zcGFyZW50OiB0cnVlLFxuICAgICAgICAgICAgICAgIG9wYWNpdHk6IDEuMCxcbiAgICAgICAgICAgICAgICBkZXB0aFRlc3Q6IGZhbHNlXG4gICAgICAgICAgICAgIH0pO1xuICAgICAgICAgICAgY29uc3QgbWVzaCA9IG5ldyBUSFJFRS5NZXNoKGdlb21ldHJ5U29saWQsIG1hdGVyaWFsU29saWQpO1xuXG4gICAgICAgICAgICAgICAgLy8gUGxhY2UgdGhlIHNtYWxsZXIgc29saWQgc3BoZXJlIGluc2lkZSB0aGUgbGFyZ2UgZ2xvdyBzcGhlcmUuXG4gICAgICAgICAgICB2YXIgZ3JvdXAgPSBuZXcgVEhSRUUuR3JvdXAoKTtcbiAgICAgICAgICAgIGdyb3VwLmFkZChtZXNoKTtcbiAgICAgICAgICAgIGdyb3VwLmFkZChnbG93RWZmZWN0KTtcblxuICAgICAgICAgICAgcmV0dXJuIGdyb3VwO1xuICAgICAgICB9XG5cbiAgICAgICAgY29uc3QgZ2V0TGlua1RocmVlTWF0ZXJpYWwgPSBmdW5jdGlvbihsaW5rKSB7XG5cbiAgICAgICAgICAgICAgICAgICAgLy8gQ3JlYXRlIGVkZ2VzIC0gZ2xvd2luZyBsaW5lc1xuICAgICAgICAgICAgY29uc3QgbGluZU1hdGVyaWFsID0gbmV3IFRIUkVFLkxpbmVCYXNpY01hdGVyaWFsKHtcbiAgICAgICAgICAgICAgICBjb2xvcjogJ3doaXRlJyxcbiAgICAgICAgICAgICAgICB0cmFuc3BhcmVudDogZmFsc2UsXG4gICAgICAgICAgICAgICAgb3BhY2l0eTogMVxuICAgICAgICAgICAgfSk7XG5cbiAgICAgICAgICAgIGNvbnN0IHNvbHV0aW9uTGluZU1hdGVyaWFsID0gbmV3IFRIUkVFLkxpbmVCYXNpY01hdGVyaWFsKHtcbiAgICAgICAgICAgICAgICBjb2xvcjogJ2N5YW4nLFxuICAgICAgICAgICAgICAgIHRyYW5zcGFyZW50OiB0cnVlLFxuICAgICAgICAgICAgICAgIG9wYWNpdHk6IDFcbiAgICAgICAgICAgIH0pO1xuXG5cbiAgICAgICAgICAgLy8gaWYgKGxpbmsuaXNTb2x1dGlvbikge1xuICAgICAgICAgICAgLy8gIHJldHVybihzb2x1dGlvbkxpbmVNYXRlcmlhbCk7XG4gICAgICAgICAgIC8vIH1cbiAgICAgICAgICAgIHJldHVybiBsaW5lTWF0ZXJpYWw7XG5cbiAgICAgICAgICAgIH1cblxuXG5cbiAgICAgICAgcmV0dXJuIDxGb3JjZUdyYXBoM0RcbiAgICAgICAgICAgIHJlZj17ZmdSZWZ9XG4gICAgICAgICAgICBncmFwaERhdGE9e2dyYXBoRGF0YX1cbiAgICAgICAgICAgIG5vZGVMYWJlbD1cImxhYmVsXCJcbiAgICAgICAgICAgIG5vZGVDb2xvcj17Z2V0Tm9kZUNvbG9yfVxuICAgICAgICAgICAgbm9kZU9wYWNpdHk9ezF9XG4gICAgICAgICAgICBsaW5rQ29sb3I9e2dldExpbmtDb2xvcn1cbiAgICAgICAgICAgIGxpbmtXaWR0aD17Z2V0TGlua1dpZHRofVxuICAgICAgICAgICAgbGlua09wYWNpdHk9ezF9XG4gICAgICAgICAgICBub2RlVGhyZWVPYmplY3Q9e2dldE5vZGVUaHJlZU9iamVjdH1cbiAgICAgICAgICAgIGxpbmtNYXRlcmlhbD17Z2V0TGlua1RocmVlTWF0ZXJpYWx9XG4gICAgICAgICAgICBiYWNrZ3JvdW5kQ29sb3I9XCIjMGEwYTBhXCJcbiAgICAgICAgICAvPjtcbiAgICAgIH1cblxuICAgICAgUmVhY3RET00ucmVuZGVyKFxuICAgICAgICA8R3JhcGhWaXN1YWxpemF0aW9uIC8+LFxuICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgndmlzdWFsaXphdGlvbicpXG4gICAgICApO1xuXG5cblxuICAgICJdfQ==</script></head>
 <body>
 
@@ -808,7 +810,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             const visited = new Set();
             const queue = [{ state: initialState, parent: null }];
 
-            while (queue.length > 0 && graphData.nodes.length < 1000) {
+            while (queue.length > 0) {
                 const { state, parent } = queue.shift();
                 const stateKey = stateToString(state);
                 if (visited.has(stateKey)) continue;
@@ -846,7 +848,7 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             const visited = new Set();
             const stack = [{ state: initialState, parent: null }];
 
-            while (stack.length > 0 && graphData.nodes.length < 1000) {
+            while (stack.length > 0) {
                 const { state, parent } = stack.pop();
                 const stateKey = stateToString(state);
                 if (visited.has(stateKey)) continue;
@@ -977,13 +979,17 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             return graphData;
         }
 
-        function bfsDistances(start, adjacency) {
+        function bfsDistances(start, adjacency, removed = new Set()) {
             const dist = {};
+            if (removed.has(start)) return dist;
+
             const queue = [start];
             dist[start] = 0;
-            while(queue.length > 0) {
+
+            while (queue.length > 0) {
                 const node = queue.shift();
-                for (const neighbor of adjacency.get(node)) {
+                for (const neighbor of adjacency.get(node) || []) {
+                    if (removed.has(neighbor)) continue;
                     if (dist[neighbor] === undefined) {
                         dist[neighbor] = dist[node] + 1;
                         queue.push(neighbor);
@@ -993,39 +999,213 @@ ReactDOM.render(React.createElement(GraphVisualization, null), document.getEleme
             return dist;
         }
 
+        function measureRobustness(graphData, adj, bfsFunc) {
+            const total = graphData.nodes.length;
+            const fractionSteps = 10;
+            let sumLargest = 0;
 
-        function finishGeneration(graphData) {
-            updateStatus(`
-            Completo<br>
-            Vértices: ${graphData.nodes.length}.<br>
-            Arestas: ${graphData.links.length}.<br>
-            `);
-            isGenerating = false;
-            currentSearchNode = null;
-            // window.updateCurrentSearchNode(null);
+            const nodesArray = [...graphData.nodes];
 
-            const solutionPath = findSolution(graphData);
-            if (solutionPath) {
-                document.getElementById('solutionSteps').textContent = solutionPath.length - 1;
-                document.getElementById('solvable').textContent = 'Sim';
+            for (let step = 0; step <= fractionSteps; step++) {
+                const removeCount = Math.floor((step / fractionSteps) * total);
 
-                const solutionLinks = new Set();
-                for (let i = 0; i < solutionPath.length - 1; i++) {
-                    solutionLinks.add(`${solutionPath[i]}-${solutionPath[i+1]}`);
-                    solutionLinks.add(`${solutionPath[i+1]}-${solutionPath[i]}`);
+                const shuffled = [...nodesArray].sort(() => Math.random() - 0.5);
+
+                const removed = new Set(
+                    shuffled
+                        .slice(0, removeCount)
+                        .map(n => n.id)
+                );
+
+                const remaining = nodesArray.filter(n => !removed.has(n.id));
+                const visited = new Set();
+                let largest = 0;
+
+                for (const node of remaining) {
+                    if (visited.has(node.id)) continue;
+                    const dist = bfsFunc(node.id, adj, removed);
+                    const compSize = Object.keys(dist).length;
+                    largest = Math.max(largest, compSize);
+                    Object.keys(dist).forEach(id => visited.add(id));
                 }
 
-                const finalLinks = graphData.links.map(link => ({
-                    ...link,
-                    isSolution: solutionLinks.has(`${link.source.id || link.source}-${link.target.id || link.target}`)
-                }));
-                window.updateGraphData({ nodes: graphData.nodes, links: finalLinks });
+                sumLargest += largest / total;
+            }
 
-            } else {
-                document.getElementById('solutionSteps').textContent = '-';
-                document.getElementById('solvable').textContent = 'Não';
+            return (1 / (fractionSteps + 1)) * sumLargest;
+        }
+
+        function measureTargetedRobustness(graphData, adj, bfsFunc, steps = 10) {
+            const total = graphData.nodes.length;
+            const degrees = graphData.nodes.map(node => {
+                const id = node.id;
+                return {
+                    id,
+                    degree: graphData.links.filter(l =>
+                        (l.source.id || l.source) === id || (l.target.id || l.target) === id
+                    ).length
+                };
+            });
+
+            const sorted = [...degrees].sort((a, b) => b.degree - a.degree);
+
+            let sumLargest = 0;
+            for (let step = 0; step <= steps; step++) {
+                const removeCount = Math.floor((step / steps) * total);
+                const removed = new Set(sorted.slice(0, removeCount).map(n => n.id));
+
+                const remaining = graphData.nodes.filter(n => !removed.has(n.id));
+                const visited = new Set();
+                let largest = 0;
+
+                for (const node of remaining) {
+                    if (visited.has(node.id)) continue;
+                    const dist = bfsFunc(node.id, adj, removed);
+                    const compSize = Object.keys(dist).length;
+                    largest = Math.max(largest, compSize);
+                    Object.keys(dist).forEach(id => visited.add(id));
+                }
+
+                sumLargest += largest / total;
+            }
+
+            return (1 / (steps + 1)) * sumLargest;
+        }
+
+        function finishGeneration(graphData) {
+        let nextNodeId = graphData.nodes.length;
+        const adj = new Map();
+        graphData.nodes.forEach(node => adj.set(node.id, new Set()));
+        graphData.links.forEach(link => {
+            const s = link.source.id ?? link.source;
+            const t = link.target.id ?? link.target;
+            adj.get(s).add(t);
+            adj.get(t).add(s);
+        });
+
+        // Precompute node degrees
+        const degreesMap = new Map();
+        graphData.nodes.forEach(n => degreesMap.set(n.id, 0));
+        graphData.links.forEach(l => {
+            const s = l.source.id ?? l.source;
+            const t = l.target.id ?? l.target;
+            degreesMap.set(s, degreesMap.get(s) + 1);
+            degreesMap.set(t, degreesMap.get(t) + 1);
+        });
+
+        // Eccentricities, radius, diameter, centers
+        const eccentricities = {};
+        for (const node of graphData.nodes) {
+            const distances = bfsDistances(node.id, adj);
+            const reachable = Object.values(distances);
+            eccentricities[node.id] = reachable.length > 0 ? Math.max(...reachable) : Infinity;
+        }
+        const finiteEcc = Object.values(eccentricities).filter(v => v !== Infinity);
+        const radius = Math.min(...finiteEcc);
+        const diameter = Math.max(...finiteEcc);
+        const centerNodes = Object.entries(eccentricities)
+            .filter(([_, e]) => e === radius)
+            .map(([id]) => id);
+
+        // Degree distribution for gamma
+        const degreeCount = {};
+        Array.from(degreesMap.values()).forEach(d => {
+            degreeCount[d] = (degreeCount[d] || 0) + 1;
+        });
+        const distribution = Object.entries(degreeCount)
+            .map(([k,v]) => ({ k: parseInt(k), pk: v / graphData.nodes.length }))
+            .filter(d => d.k > 0 && d.pk > 0);
+
+        const logData = distribution.map(d => ({
+            x: Math.log(d.k),
+            y: Math.log(d.pk)
+        }));
+
+        let gamma = null;
+        if (logData.length >= 2) {
+            const n = logData.length;
+            const sumX = logData.reduce((a,b) => a + b.x, 0);
+            const sumY = logData.reduce((a,b) => a + b.y, 0);
+            const sumXY = logData.reduce((a,b) => a + b.x * b.y, 0);
+            const sumX2 = logData.reduce((a,b) => a + b.x*b.x, 0);
+            const slope = (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX);
+            gamma = -slope;
+            if (gamma < 0 || !isFinite(gamma)) gamma = null;
+        }
+        const isScaleFree = gamma && gamma >= 2 && gamma <= 3;
+
+        // --- Centralities ---
+        const nodeMap = new Map();
+        graphData.nodes.forEach(n => {
+            n.degree = degreesMap.get(n.id);
+            nodeMap.set(n.id, n);
+            n.betweenness = 0; // init
+        });
+
+        for (const node of graphData.nodes) {
+            const distances = bfsDistances(node.id, adj);
+            const sumDist = Object.values(distances).reduce((a,b)=>a+b,0);
+            node.closeness = sumDist > 0 ? (graphData.nodes.length-1)/sumDist : 0;
+            const diameterNode = Math.max(...Object.values(distances));
+            node.radiality = sumDist > 0 ? ((graphData.nodes.length-1)*(diameterNode+1) - sumDist)/(graphData.nodes.length-2) : 0;
+            node.eccentricity = diameterNode;
+        }
+
+        // Betweenness centrality (Brandes)
+        for (const s of graphData.nodes) {
+            const stack = [], pred = new Map();
+            const sigma = new Map(), dist = new Map(), delta = new Map();
+            graphData.nodes.forEach(v => { pred.set(v.id, []); sigma.set(v.id, 0); dist.set(v.id, -1); delta.set(v.id, 0); });
+            sigma.set(s.id, 1);
+            dist.set(s.id, 0);
+            const queue = [s.id];
+
+            while (queue.length > 0) {
+                const v = queue.shift();
+                stack.push(v);
+                for (const w of adj.get(v)) {
+                    if (dist.get(w) < 0) {
+                        dist.set(w, dist.get(v)+1);
+                        queue.push(w);
+                    }
+                    if (dist.get(w) === dist.get(v)+1) {
+                        sigma.set(w, sigma.get(w)+sigma.get(v));
+                        pred.get(w).push(v);
+                    }
+                }
+            }
+
+            while (stack.length > 0) {
+                const w = stack.pop();
+                for (const v of pred.get(w)) {
+                    delta.set(v, delta.get(v) + (sigma.get(v)/sigma.get(w))*(1 + delta.get(w)));
+                }
+                if (w !== s.id) nodeMap.get(w).betweenness += delta.get(w);
             }
         }
+
+        // --- Robustness ---
+        const robustness = measureRobustness(graphData, adj, bfsDistances);
+        const targetedRobustness = measureTargetedRobustness(graphData, adj, bfsDistances, 10);
+
+        updateStatus(`
+            <div style="max-height: 180px; overflow-y: auto; padding-right: 6px; line-height: 1.5;">
+                Completo<br>
+                Vértices: ${graphData.nodes.length}.<br>
+                Arestas: ${graphData.links.length}.<br>
+                Raio: ${radius}.<br>
+                Diâmetro: ${diameter}.<br>
+                Centro(s): ${centerNodes.join(', ')}.<br>
+                Expoente γ ≈ ${gamma ? gamma.toFixed(2) : 'N/A'}<br>
+                Rede sem escala: ${isScaleFree ? 'Sim' : 'Não'}<br>
+                Robustez: ${(robustness*100).toFixed(1)}%<br>
+                Robustez direcionada: ${(targetedRobustness*100).toFixed(1)}%<br>
+            </div>
+        `);
+
+        isGenerating = false;
+        currentSearchNode = null;
+    }
 
         function getCurrentPuzzleState() {
             const blocks = Array.from(document.querySelectorAll('.block')).map(b => {
