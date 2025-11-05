@@ -1074,139 +1074,192 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function finishGeneration(graphData) {
-        let nextNodeId = graphData.nodes.length;
-        const adj = new Map();
-        graphData.nodes.forEach(node => adj.set(node.id, new Set()));
-        graphData.links.forEach(link => {
-            const s = link.source.id ?? link.source;
-            const t = link.target.id ?? link.target;
-            adj.get(s).add(t);
-            adj.get(t).add(s);
-        });
+            let nextNodeId = graphData.nodes.length;
+            const adj = new Map();
+            graphData.nodes.forEach(node => adj.set(node.id, new Set()));
 
-        // Precompute node degrees
-        const degreesMap = new Map();
-        graphData.nodes.forEach(n => degreesMap.set(n.id, 0));
-        graphData.links.forEach(l => {
-            const s = l.source.id ?? l.source;
-            const t = l.target.id ?? l.target;
-            degreesMap.set(s, degreesMap.get(s) + 1);
-            degreesMap.set(t, degreesMap.get(t) + 1);
-        });
+            const degreesMap = new Map();
+            graphData.nodes.forEach(node => degreesMap.set(node.id, 0));
 
-        // Eccentricities, radius, diameter, centers
-        const eccentricities = {};
-        for (const node of graphData.nodes) {
-            const distances = bfsDistances(node.id, adj);
-            const reachable = Object.values(distances);
-            eccentricities[node.id] = reachable.length > 0 ? Math.max(...reachable) : Infinity;
-        }
-        const finiteEcc = Object.values(eccentricities).filter(v => v !== Infinity);
-        const radius = Math.min(...finiteEcc);
-        const diameter = Math.max(...finiteEcc);
-        const centerNodes = Object.entries(eccentricities)
-            .filter(([_, e]) => e === radius)
-            .map(([id]) => id);
+            graphData.links.forEach(link => {
+                const s = typeof link.source === 'object' ? link.source.id : link.source;
+                const t = typeof link.target === 'object' ? link.target.id : link.target;
 
-        // Degree distribution for gamma
-        const degreeCount = {};
-        Array.from(degreesMap.values()).forEach(d => {
-            degreeCount[d] = (degreeCount[d] || 0) + 1;
-        });
-        const distribution = Object.entries(degreeCount)
-            .map(([k,v]) => ({ k: parseInt(k), pk: v / graphData.nodes.length }))
-            .filter(d => d.k > 0 && d.pk > 0);
+                // Add to adjacency
+                adj.get(s).add(t);
+                adj.get(t).add(s);
 
-        const logData = distribution.map(d => ({
-            x: Math.log(d.k),
-            y: Math.log(d.pk)
-        }));
+                // Count degrees
+                degreesMap.set(s, degreesMap.get(s) + 1);
+                degreesMap.set(t, degreesMap.get(t) + 1);
+            });
 
-        let gamma = null;
-        if (logData.length >= 2) {
-            const n = logData.length;
-            const sumX = logData.reduce((a,b) => a + b.x, 0);
-            const sumY = logData.reduce((a,b) => a + b.y, 0);
-            const sumXY = logData.reduce((a,b) => a + b.x * b.y, 0);
-            const sumX2 = logData.reduce((a,b) => a + b.x*b.x, 0);
-            const slope = (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX);
-            gamma = -slope;
-            if (gamma < 0 || !isFinite(gamma)) gamma = null;
-        }
-        const isScaleFree = gamma && gamma >= 2 && gamma <= 3;
+            // Eccentricities, radius, diameter, centers
+            const eccentricities = {};
+            for (const node of graphData.nodes) {
+                const distances = bfsDistances(node.id, adj);
+                const reachable = Object.values(distances);
+                eccentricities[node.id] = reachable.length > 0 ? Math.max(...reachable) : Infinity;
+            }
+            const finiteEcc = Object.values(eccentricities).filter(v => v !== Infinity);
+            const radius = Math.min(...finiteEcc);
+            const diameter = Math.max(...finiteEcc);
+            const centerNodes = Object.entries(eccentricities)
+                .filter(([_, e]) => e === radius)
+                .map(([id]) => id);
 
-        // --- Centralities ---
-        const nodeMap = new Map();
-        graphData.nodes.forEach(n => {
-            n.degree = degreesMap.get(n.id);
-            nodeMap.set(n.id, n);
-            n.betweenness = 0; // init
-        });
+            // Degree distribution for gamma
+            const degreeCount = {};
+            Array.from(degreesMap.values()).forEach(d => {
+                degreeCount[d] = (degreeCount[d] || 0) + 1;
+            });
+            const distribution = Object.entries(degreeCount)
+                .map(([k,v]) => ({ k: parseInt(k), pk: v / graphData.nodes.length }))
+                .filter(d => d.k > 0 && d.pk > 0);
 
-        for (const node of graphData.nodes) {
-            const distances = bfsDistances(node.id, adj);
-            const sumDist = Object.values(distances).reduce((a,b)=>a+b,0);
-            node.closeness = sumDist > 0 ? (graphData.nodes.length-1)/sumDist : 0;
-            const diameterNode = Math.max(...Object.values(distances));
-            node.radiality = sumDist > 0 ? ((graphData.nodes.length-1)*(diameterNode+1) - sumDist)/(graphData.nodes.length-2) : 0;
-            node.eccentricity = diameterNode;
-        }
+            const logData = distribution.map(d => ({
+                x: Math.log(d.k),
+                y: Math.log(d.pk)
+            }));
 
-        // Betweenness centrality (Brandes)
-        for (const s of graphData.nodes) {
-            const stack = [], pred = new Map();
-            const sigma = new Map(), dist = new Map(), delta = new Map();
-            graphData.nodes.forEach(v => { pred.set(v.id, []); sigma.set(v.id, 0); dist.set(v.id, -1); delta.set(v.id, 0); });
-            sigma.set(s.id, 1);
-            dist.set(s.id, 0);
-            const queue = [s.id];
+            let gamma = null;
+            if (logData.length >= 2) {
+                const n = logData.length;
+                const sumX = logData.reduce((a,b) => a + b.x, 0);
+                const sumY = logData.reduce((a,b) => a + b.y, 0);
+                const sumXY = logData.reduce((a,b) => a + b.x * b.y, 0);
+                const sumX2 = logData.reduce((a,b) => a + b.x*b.x, 0);
+                const slope = (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX);
+                gamma = -slope;
+                if (gamma < 0 || !isFinite(gamma)) gamma = null;
+            }
+            const isScaleFree = gamma && gamma >= 2 && gamma <= 3;
 
-            while (queue.length > 0) {
-                const v = queue.shift();
-                stack.push(v);
-                for (const w of adj.get(v)) {
-                    if (dist.get(w) < 0) {
-                        dist.set(w, dist.get(v)+1);
-                        queue.push(w);
+            // --- Centralities ---
+            const nodeMap = new Map();
+            graphData.nodes.forEach(n => {
+                n.degree = degreesMap.get(n.id);
+                nodeMap.set(n.id, n);
+                n.betweenness = 0; // init
+            });
+
+            for (const node of graphData.nodes) {
+                const distances = bfsDistances(node.id, adj);
+                const sumDist = Object.values(distances).reduce((a,b)=>a+b,0);
+                node.closeness = sumDist > 0 ? (graphData.nodes.length-1)/sumDist : 0;
+                const diameterNode = Math.max(...Object.values(distances));
+                node.radiality = sumDist > 0 ? ((graphData.nodes.length-1)*(diameterNode+1) - sumDist)/(graphData.nodes.length-2) : 0;
+                node.eccentricity = diameterNode;
+            }
+
+            // Betweenness centrality (Brandes)
+            for (const s of graphData.nodes) {
+                const stack = [], pred = new Map();
+                const sigma = new Map(), dist = new Map(), delta = new Map();
+                graphData.nodes.forEach(v => { pred.set(v.id, []); sigma.set(v.id, 0); dist.set(v.id, -1); delta.set(v.id, 0); });
+                sigma.set(s.id, 1);
+                dist.set(s.id, 0);
+                const queue = [s.id];
+
+                while (queue.length > 0) {
+                    const v = queue.shift();
+                    stack.push(v);
+                    for (const w of adj.get(v)) {
+                        if (dist.get(w) < 0) {
+                            dist.set(w, dist.get(v)+1);
+                            queue.push(w);
+                        }
+                        if (dist.get(w) === dist.get(v)+1) {
+                            sigma.set(w, sigma.get(w)+sigma.get(v));
+                            pred.get(w).push(v);
+                        }
                     }
-                    if (dist.get(w) === dist.get(v)+1) {
-                        sigma.set(w, sigma.get(w)+sigma.get(v));
-                        pred.get(w).push(v);
+                }
+
+                while (stack.length > 0) {
+                    const w = stack.pop();
+                    for (const v of pred.get(w)) {
+                        delta.set(v, delta.get(v) + (sigma.get(v)/sigma.get(w))*(1 + delta.get(w)));
                     }
+                    if (w !== s.id) nodeMap.get(w).betweenness += delta.get(w);
                 }
             }
 
-            while (stack.length > 0) {
-                const w = stack.pop();
-                for (const v of pred.get(w)) {
-                    delta.set(v, delta.get(v) + (sigma.get(v)/sigma.get(w))*(1 + delta.get(w)));
-                }
-                if (w !== s.id) nodeMap.get(w).betweenness += delta.get(w);
-            }
+            // --- Robustness ---
+            const robustness = measureRobustness(graphData, adj, bfsDistances);
+            const targetedRobustness = measureTargetedRobustness(graphData, adj, bfsDistances, 10);
+
+            const nNodes = graphData.nodes.length;
+            const mLinks = graphData.links.length;
+            const L = averagePathLengthFast(adj); // função BFS otimizada abaixo
+            const C = clusteringCoefficientFast(adj);
+            const p = 2*mLinks/(nNodes*(nNodes-1));
+            const L_random = Math.log(nNodes)/Math.log(nNodes*p);
+            const C_random = p;
+            const isSmallWorld = (C > 5*C_random) && (L/L_random < 2);
+
+            updateStatus(`
+                <div style="max-height: 180px; overflow-y: auto; padding-right: 6px; line-height: 1.5;">
+                    Completo<br>
+                    Vértices: ${graphData.nodes.length}.<br>
+                    Arestas: ${graphData.links.length}.<br>
+                    Raio: ${radius}.<br>
+                    Diâmetro: ${diameter}.<br>
+                    Centro(s): ${centerNodes.join(', ')}.<br>
+                    Expoente γ ≈ ${gamma ? gamma.toFixed(2) : 'N/A'}<br>
+                    Rede sem escala: ${isScaleFree ? 'Sim' : 'Não'}<br>
+                    Robustez: ${(robustness*100).toFixed(1)}%<br>
+                    Robustez direcionada: ${(targetedRobustness*100).toFixed(1)}%<br>
+                    Caminho médio: ${L.toFixed(2)}<br>
+                    Coef. de agrupamento: ${C.toFixed(3)}<br>
+                    Rede pequeno mundo: ${isSmallWorld ? 'Sim' : 'Não'}
+                </div>
+            `);
+
+            isGenerating = false;
+            currentSearchNode = null;
         }
 
-        // --- Robustness ---
-        const robustness = measureRobustness(graphData, adj, bfsDistances);
-        const targetedRobustness = measureTargetedRobustness(graphData, adj, bfsDistances, 10);
+        function averagePathLengthFast(adj) {
+            let totalDist = 0, pairCount = 0;
+            const nodes = Array.from(adj.keys());
+            for (const node of nodes) {
+                const dist = bfsDistances(node, adj);
+                const vals = Object.values(dist);
+                totalDist += vals.reduce((a,b)=>a+b,0);
+                pairCount += vals.length - 1;
+            }
+            return totalDist/pairCount;
+        }
 
-        updateStatus(`
-            <div style="max-height: 180px; overflow-y: auto; padding-right: 6px; line-height: 1.5;">
-                Completo<br>
-                Vértices: ${graphData.nodes.length}.<br>
-                Arestas: ${graphData.links.length}.<br>
-                Raio: ${radius}.<br>
-                Diâmetro: ${diameter}.<br>
-                Centro(s): ${centerNodes.join(', ')}.<br>
-                Expoente γ ≈ ${gamma ? gamma.toFixed(2) : 'N/A'}<br>
-                Rede sem escala: ${isScaleFree ? 'Sim' : 'Não'}<br>
-                Robustez: ${(robustness*100).toFixed(1)}%<br>
-                Robustez direcionada: ${(targetedRobustness*100).toFixed(1)}%<br>
-            </div>
-        `);
+        function clusteringCoefficientFast(adj) {
+            let sumC = 0;
+            let nNodes = adj.size;
 
-        isGenerating = false;
-        currentSearchNode = null;
-    }
+            for (const node of adj.keys()) {
+                const neighbors = Array.from(adj.get(node));
+                const k = neighbors.length;
+                if (k < 2) {
+                    // Clustering coefficient for nodes with <2 neighbors is 0
+                    sumC += 0;
+                    continue;
+                }
+
+                let linksBetween = 0;
+                for (let i = 0; i < k; i++) {
+                    const neighI = adj.get(neighbors[i]);
+                    for (let j = i + 1; j < k; j++) {
+                        if (neighI.has(neighbors[j])) linksBetween++;
+                    }
+                }
+
+                sumC += (2 * linksBetween) / (k * (k - 1));
+            }
+
+            return sumC / nNodes;
+        }
+
+
 
         function getCurrentPuzzleState() {
             const blocks = Array.from(document.querySelectorAll('.block')).map(b => {
