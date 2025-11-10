@@ -1219,21 +1219,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
             updateStatus(`
                 <div style="max-height: 180px; overflow-y: auto; padding-right: 6px; line-height: 1.5;">
-                    Completo<br>
-                    Vértices: ${graphData.nodes.length}.<br>
-                    Arestas: ${graphData.links.length}.<br>
-                    Raio: ${radius}.<br>
-                    Diâmetro: ${diameter}.<br>
-                    Centro(s): ${centerNodes.join(', ')}.<br>
-                    Expoente γ ≈ ${gamma ? gamma.toFixed(2) : 'N/A'}<br>
-                    Rede sem escala: ${isScaleFree ? 'Sim' : 'Não'}<br>
-                    Robustez: ${(robustness*100).toFixed(1)}%<br>
-                    Robustez direcionada: ${(targetedRobustness*100).toFixed(1)}%<br>
-                    Caminho médio: ${L.toFixed(2)}<br>
-                    Coef. de agrupamento: ${C.toFixed(3)}<br>
-                    Rede pequeno mundo: ${isSmallWorld ? 'Sim' : 'Não'}<br>
-                    Comunidades: ${comList.length}<br>
-                    Tamanhos: ${comText || '-'}
+                    <span title="O grafo está completamente conectado.">Completo</span><br>
+                    <span title="Número total de vértices (nós) no grafo.">Vértices: ${graphData.nodes.length}</span><br>
+                    <span title="Número total de arestas (conexões) no grafo.">Arestas: ${graphData.links.length}</span><br>
+                    <span title="Menor distância máxima de um nó até qualquer outro.">Raio: ${radius}</span><br>
+                    <span title="Maior distância mínima entre quaisquer dois nós.">Diâmetro: ${diameter}</span><br>
+                    <span title="Nós centrais com menor distância máxima até os outros.">Centro(s): ${centerNodes.join(', ')}</span><br>
+                    <span title="Expoente da distribuição de graus; indica heterogeneidade.">Expoente γ ≈ ${gamma ? gamma.toFixed(2) : 'N/A'}</span><br>
+                    <span title="Indica se a rede segue uma distribuição sem escala (lei de potência).">Rede sem escala: ${isScaleFree ? 'Sim' : 'Não'}</span><br>
+                    <span title="Robustez geral frente à remoção aleatória de nós.">Robustez: ${(robustness*100).toFixed(1)}%</span><br>
+                    <span title="Robustez frente à remoção direcionada dos nós mais conectados.">Robustez direcionada: ${(targetedRobustness*100).toFixed(1)}%</span><br>
+                    <span title="Comprimento médio dos caminhos mínimos entre todos os pares de nós.">Caminho médio: ${L.toFixed(2)}</span><br>
+                    <span title="Grau médio de agrupamento dos nós; mede a tendência de formar triângulos.">Coef. de agrupamento: ${C.toFixed(3)}</span><br>
+                    <span title="Indica se a rede tem características de pequeno mundo (alta conexão local e curta distância global).">Rede pequeno mundo: ${isSmallWorld ? 'Sim' : 'Não'}</span><br>
+                    <span title="Número de comunidades detectadas no grafo.">Comunidades: ${comList.length}</span><br>
+                    <span title="Tamanho de cada comunidade identificada.">Tamanhos: ${comText || '-'}</span>
                 </div>
             `);
 
