@@ -923,24 +923,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function calculateCentrality(graphData, closenessHighlight) {
             const n = graphData.nodes.length;
+            const nodeMap = new Map(graphData.nodes.map(n => [n.id, n]));
             const adjacency = new Map();
             for (const node of graphData.nodes) adjacency.set(node.id, new Set());
             for (const link of graphData.links) {
                 adjacency.get(link.source).add(link.target);
                 adjacency.get(link.target).add(link.source);
             }
+
             for (const node of graphData.nodes) {
                 node.degree = adjacency.get(node.id).size;
+                node.betweenness = 0;
             }
 
+            // Compute global diameter
+            let globalDiameter = 0;
+            for (const node of graphData.nodes) {
+                const distances = bfsDistances(node.id, adjacency);
+                const ecc = Math.max(...Object.values(distances));
+                if (ecc > globalDiameter) globalDiameter = ecc;
+            }
+
+            // Communities
             const comMapLocal = labelPropagation(adjacency, graphData.nodes, 50);
 
+            // Compute closeness, radiality, etc.
             for (const node of graphData.nodes) {
                 const distances = bfsDistances(node.id, adjacency);
                 const sumDist = Object.values(distances).reduce((a,b)=>a+b,0);
                 node.closeness = sumDist > 0 ? (n - 1) / sumDist : 0;
-                node.radiality = sumDist > 0 ? ((n - 1) - sumDist / (n - 1)) : 0;
+
+                const validDistances = Object.values(distances).filter(d => d > 0 && d < Infinity);
+                const radialitySum = validDistances.reduce((a, d) => a + (globalDiameter + 1 - d), 0);
+                node.radiality = (1 / (n - 1)) * radialitySum;
+
                 node.eccentricity = Math.max(...Object.values(distances));
+
                 const neigh = Array.from(adjacency.get(node.id));
                 if (neigh.length > 0) {
                     const meanNeighDeg = neigh.reduce((a,b)=>a + adjacency.get(b).size, 0) / neigh.length;
@@ -948,25 +966,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     node.assortativity = 0;
                 }
+
                 node.community = comMapLocal.get(node.id) || 0;
-                node.label = `
-                ID: ${node.id} </br>
-                Comunidade: ${node.community}</br>
-                Grau: ${node.degree}</br>
-                Centralidade: ${node.closeness.toFixed(2)}</br>
-                Radialidade: ${node.radiality.toFixed(2)}</br>
-                Excentricidade: ${node.eccentricity}</br>
-                Assortatividade: ${node.assortativity.toFixed(3)}
-                `;
             }
 
-            graphData.nodes.forEach(n => n.betweenness = 0);
+            // --- Betweenness centrality (Brandes algorithm) ---
             for (const s of graphData.nodes) {
                 const stack = [], pred = new Map();
                 const sigma = new Map(), dist = new Map(), delta = new Map();
-                graphData.nodes.forEach(v => { pred.set(v.id, []); sigma.set(v.id, 0); dist.set(v.id, -1); delta.set(v.id, 0); });
-                sigma.set(s.id, 1); dist.set(s.id, 0);
+
+                graphData.nodes.forEach(v => {
+                    pred.set(v.id, []);
+                    sigma.set(v.id, 0);
+                    dist.set(v.id, -1);
+                    delta.set(v.id, 0);
+                });
+
+                sigma.set(s.id, 1);
+                dist.set(s.id, 0);
                 const queue = [s.id];
+
                 while (queue.length > 0) {
                     const v = queue.shift();
                     stack.push(v);
@@ -981,19 +1000,35 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 }
+
                 while (stack.length > 0) {
                     const w = stack.pop();
                     for (const v of pred.get(w)) {
-                        delta.set(v, delta.get(v) + (sigma.get(v)/sigma.get(w))*(1 + delta.get(w)));
+                        delta.set(v, delta.get(v) + (sigma.get(v)/sigma.get(w)) * (1 + delta.get(w)));
                     }
-                    if (w !== s.id) graphData.nodes[w].betweenness += delta.get(w);
+                    if (w !== s.id) nodeMap.get(w).betweenness += delta.get(w);
                 }
             }
 
+            // --- Build labels AFTER all metrics are ready ---
+            for (const node of graphData.nodes) {
+                node.label = `
+                ID: ${node.id} </br>
+                Comunidade: ${node.community}</br>
+                Grau: ${node.degree}</br>
+                Centralidade (Closeness): ${node.closeness.toFixed(2)}</br>
+                Radialidade: ${node.radiality.toFixed(2)}</br>
+                Excentricidade: ${node.eccentricity}</br>
+                Assortatividade: ${node.assortativity.toFixed(3)}</br>
+                Betweenness: ${node.betweenness.toFixed(2)}
+                `;
+            }
+
+            // --- Coloring logic ---
             if (closenessHighlight) {
                 const maxCloseness = Math.max(...graphData.nodes.map(n => n.closeness), 0.00001);
                 graphData.nodes.forEach(n => {
-                    const t = n.closeness / maxCloseness; 
+                    const t = n.closeness / maxCloseness;
                     let r, g, b;
                     if (t < 0.5) {
                         const localT = t / 0.5;
@@ -1018,8 +1053,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             }
+
             return graphData;
         }
+        
         function bfsDistances(start, adjacency, removed = new Set()) {
             const dist = {};
             if (removed.has(start)) return dist;
